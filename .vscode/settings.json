@@ -1,0 +1,17 @@
+{
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode"
+	},
+	"[javascript][javascriptreact][typescript][typescriptreact][svelte]": {
+		"editor.codeActionsOnSave": {
+			"source.organizeImports": "explicit"
+		}
+	},
+	"workbench.editor.labelFormat": "short",
+	"eslint.validate": ["svelte"],
+	"triggerTaskOnSave.tasks": {
+		"npm: build": ["src/**/*.js", "src/**/*.scss", "src/**/*.svelte", ".env"]
+	}
+}
