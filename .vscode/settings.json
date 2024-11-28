@@ -12,6 +12,14 @@
 	"workbench.editor.labelFormat": "short",
 	"eslint.validate": ["svelte"],
 	"triggerTaskOnSave.tasks": {
-		"npm: build": ["src/**/*.js", "src/**/*.scss", "src/**/*.svelte", ".env"]
+		"npm: build": [
+			"src/**/*.html",
+			"src/**/*.js",
+			"src/**/*.scss",
+			"src/**/*.svelte",
+			"vite.config.ts",
+			"static/**/*",
+			".env"
+		]
 	}
 }
