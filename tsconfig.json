@@ -9,6 +9,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
+		"verbatimModuleSyntax": true,
 		"types": ["vite/client", "@types/chrome"]
 	},
 	"exclude": ["node_modules", "dist"]
