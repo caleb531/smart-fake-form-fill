@@ -1,12 +1,14 @@
 {
 	"compilerOptions": {
-		"target": "ESNext",
+		"target": "esnext",
+		"module": "esnext",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"types": ["vite/client"]
 	}
 }
