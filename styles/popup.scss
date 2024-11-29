@@ -1,1 +1,13 @@
 @use 'base';
+
+.loading-indicator-icon {
+	width: 24px;
+	stroke: var(--color-app-text);
+	stroke-width: 30;
+}
+
+.form-footer {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+}

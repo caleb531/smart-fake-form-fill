@@ -1,11 +1,17 @@
 import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
-import { FieldDefinition } from './scripts/types';
+import type { FieldDefinition } from './scripts/types';
 
 const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
 
 interface CompletionMessage {
 	fieldDefinitions: FieldDefinition[];
+}
+
+// When the JSON is returned from the OpenAI API, it is wrapped in a Markdown
+// code block; we must unwrap it so we can parse it as JSON
+function unwrapJSONStringFromMarkdown(markdownString: string): string {
+	return markdownString.replace(/^```json\n/, '').replace(/\s*```$/, '');
 }
 
 async function getCompletions(
@@ -28,15 +34,22 @@ async function getCompletions(
 				}
 			]
 		});
-		sendResponse({ success: true, data: completion.choices[0]?.message.content });
+		sendResponse({
+			success: true,
+			fieldValues: JSON.parse(
+				unwrapJSONStringFromMarkdown(String(completion.choices[0]?.message.content))
+			)
+		});
 	} catch (error) {
 		console.error(error);
-		sendResponse({ success: false, error });
+		if (error instanceof Error) {
+			sendResponse({ success: false, errorMessage: error.message });
+		}
 	}
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === 'getFormValues') {
+	if (message.action === 'getFieldValues') {
 		// According to MDN, "Promise as a return value is not supported in Chrome
 		// until Chrome bug 1185241 is resolved. As an alternative, return true and
 		// use sendResponse." (see

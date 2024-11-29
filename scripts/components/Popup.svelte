@@ -1,37 +1,74 @@
 <script lang="ts">
-	import type { FieldDefinition } from '../types';
+	import type {
+		FieldDefinitionGetterRequest,
+		FieldDefinitionGetterResponse,
+		FieldPopulatorRequest,
+		FieldPopulatorResponse,
+		FieldValueGetterRequest,
+		FieldValueGetterResponse
+	} from '../types';
+	import LoadingIcon from './LoadingIndicator.svelte';
+
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
+	let processingMessage: string | null = $state(null);
 
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
 		try {
-			console.log(`Fill the form at: ${formSelector}`);
+			processingMessage = 'Collecting form field details…';
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-			console.log('activeTab', activeTab);
 			if (!activeTab?.id) {
 				console.log('no active tab');
 				return;
 			}
-			const response: { fieldDefinitions: FieldDefinition[]; errorMessage?: string } =
-				await chrome.tabs.sendMessage(activeTab.id, {
-					action: 'getfieldDefinitions',
-					formSelector
-				});
-			if (response.errorMessage) {
-				console.log('the error message:', response.errorMessage);
-				throw new Error(response.errorMessage);
+			// First, collect the field definitions for the form matching the given
+			// selector, throwing an error if the form cannot be found
+			const fieldDefGetterRequest: FieldDefinitionGetterRequest = {
+				action: 'getFieldDefinitions',
+				formSelector
+			};
+			const fieldDefGetterResponse: FieldDefinitionGetterResponse = await chrome.tabs.sendMessage(
+				activeTab.id,
+				fieldDefGetterRequest
+			);
+			if (fieldDefGetterResponse.errorMessage) {
+				throw new Error(fieldDefGetterResponse.errorMessage);
 			}
-			const { fieldDefinitions } = response;
-			console.log('sending field definitions to service worker:', fieldDefinitions);
-			chrome.runtime.sendMessage({ action: 'getFormValues', fieldDefinitions }, (response) => {
-				console.log('Response from service worker:', response);
-			});
+			const { fieldDefinitions } = fieldDefGetterResponse;
+			// Once we have the field definitions, send them to OpenAI to generate
+			// fake values for the respective fields
+			processingMessage = 'Generating smart fake values with AI…';
+			const fieldValueGetterRequest: FieldValueGetterRequest = {
+				action: 'getFieldValues',
+				fieldDefinitions
+			};
+			const fieldValueGetterResponse: FieldValueGetterResponse =
+				await chrome.runtime.sendMessage(fieldValueGetterRequest);
+			if (fieldValueGetterResponse.errorMessage) {
+				throw new Error(fieldValueGetterResponse.errorMessage);
+			}
+			// Finally, populate the form fields with the generated fake values from
+			// the LLM
+			processingMessage = 'Populating fake values into form fields…';
+			const fieldPopulatorRequest: FieldPopulatorRequest = {
+				action: 'populateFieldsIntoForm',
+				fieldValues: fieldValueGetterResponse.fieldValues
+			};
+			const fieldPopulatorResponse: FieldPopulatorResponse = await chrome.tabs.sendMessage(
+				activeTab.id,
+				fieldPopulatorRequest
+			);
+			if (fieldPopulatorResponse.errorMessage) {
+				throw new Error(fieldPopulatorResponse.errorMessage);
+			}
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
 			}
+		} finally {
+			processingMessage = null;
 		}
 	}
 </script>
@@ -50,5 +87,11 @@
 			<p class="form-error">{formError}</p>
 		{/if}
 	</div>
-	<button>Fill Form</button>
+	<div class="form-footer">
+		{#if processingMessage !== null}
+			<LoadingIcon label={processingMessage} />
+		{:else}
+			<button>Fill Form</button>
+		{/if}
+	</div>
 </form>

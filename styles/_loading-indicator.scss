@@ -1,0 +1,22 @@
+.loading-indicator {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.loading-indicator-icon {
+	fill: none;
+	animation: loading 1000ms linear infinite;
+}
+
+.loading-indicator-label {
+	margin-left: 5px;
+	font-size: 14px;
+}
+
+// Define the a spinning/throbbing animation for the indicator
+@keyframes loading {
+	100% {
+		transform: rotate(360deg);
+	}
+}

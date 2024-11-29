@@ -1,15 +1,19 @@
-import type { FieldDefinition } from './scripts/types';
+import type {
+	FieldDefinition,
+	FieldDefinitionGetterRequest,
+	FieldPopulatorRequest,
+	FieldValues
+} from './scripts/types';
+
+let lastSelectedForm: HTMLFormElement | null = null;
 
 function getForm(formSelector: string): HTMLFormElement {
 	const selectorParts = formSelector.split('::shadow-root');
 	let currentElement: Element | null = document.body;
 	selectorParts.forEach((selectorPart) => {
-		console.log('currentElement before', currentElement);
 		currentElement = currentElement?.querySelector(`& ${selectorPart}`) ?? null;
-		console.log(`currentElement after "& ${selectorPart}":`, currentElement);
 		if (currentElement?.shadowRoot) {
 			currentElement = currentElement?.shadowRoot?.firstElementChild;
-			console.log('after shadow!!!', currentElement);
 		}
 	});
 	if (!currentElement) {
@@ -22,7 +26,7 @@ function getForm(formSelector: string): HTMLFormElement {
 }
 
 // The an array of field definitions to send to the OpenAI API
-function getfieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
+function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 	return (
 		Array.from(
 			form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLFieldSetElement>(
@@ -54,19 +58,48 @@ function getfieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 	);
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	try {
-		if (message.action === 'getfieldDefinitions') {
-			const form = getForm(message.formSelector);
-			const fieldDefinitions = getfieldDefinitions(form);
-			console.log('form', form);
-			console.log('fieldDefinitions', fieldDefinitions);
-			sendResponse({ fieldDefinitions });
-		}
-	} catch (error) {
-		console.error(error);
-		if (error instanceof Error) {
-			sendResponse({ errorMessage: error.message });
+async function populateFieldsIntoForm({
+	form,
+	fieldValues
+}: {
+	form: HTMLFormElement;
+	fieldValues: FieldValues;
+}): Promise<void> {
+	console.log('about to populate fields; fieldValues:', fieldValues);
+	// First store an object literal of the fieldsets within this form, where the
+	// key is the fieldset name and the value is DOM element for that fieldset
+	const fieldsetsByName: Record<string, HTMLFieldSetElement> = Object.fromEntries(
+		Array.from(form.querySelectorAll('fieldset')).map((fieldset) => {
+			return [fieldset.name, fieldset];
+		})
+	);
+	console.log('fieldsetsByName', fieldsetsByName);
+	// Object.entries(fieldValues).forEach(([fieldName, fieldValue]) => {});
+}
+
+chrome.runtime.onMessage.addListener(
+	(message: FieldDefinitionGetterRequest | FieldPopulatorRequest, sender, sendResponse) => {
+		try {
+			if (message.action === 'getFieldDefinitions') {
+				const { formSelector } = message as FieldDefinitionGetterRequest;
+				lastSelectedForm = getForm(formSelector);
+				const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
+				sendResponse({ fieldDefinitions });
+			} else if (message.action === 'populateFieldsIntoForm') {
+				const { fieldValues } = message as FieldPopulatorRequest;
+				console.log('fieldValues', fieldValues);
+				if (!lastSelectedForm) {
+					console.log('No form selected; aborting.');
+					return;
+				}
+				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
+				sendResponse({ success: true });
+			}
+		} catch (error) {
+			console.error(error);
+			if (error instanceof Error) {
+				sendResponse({ errorMessage: error.message });
+			}
 		}
 	}
-});
+);
