@@ -14,7 +14,7 @@
 	"triggerTaskOnSave.tasks": {
 		"npm: build": [
 			"src/**/*.html",
-			"src/**/*.js",
+			"src/**/*.ts",
 			"src/**/*.scss",
 			"src/**/*.svelte",
 			"vite.config.ts",
