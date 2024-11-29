@@ -1,0 +1,13 @@
+:root {
+	// Base colors
+	--color-black: hsl(0 0% 7%);
+	--color-turquoise: hsl(192.79 100% 49%);
+	--color-white: hsl(0 0% 100%);
+}
+
+:root {
+	// Semantic colors
+	--color-app-background: var(--color-black);
+	--color-app-text: var(--color-white);
+	--color-app-links: var(--color-turquoise);
+}

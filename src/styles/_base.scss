@@ -1,3 +1,16 @@
+@import 'colors';
+
 .site-wrapper {
 	display: contents;
+}
+
+body {
+	margin: 0;
+	padding: 20px 30px;
+	background-color: var(--color-app-background);
+	color: var(--color-app-text);
+}
+
+a {
+	color: var(--color-app-links);
 }
