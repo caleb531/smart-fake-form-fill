@@ -1,7 +1,12 @@
 :root {
 	// Base colors
 	--color-black: hsl(0 0% 7%);
+	--color-gray: hsl(0, 0%, 25%);
+	--color-blue: hsl(225, 100%, 60%);
 	--color-turquoise: hsl(192.79 100% 49%);
+	--color-red: hsl(12, 100%, 50%);
+	--color-orange: hsl(32, 93%, 50%);
+	--color-yellow: hsl(45, 100%, 60%);
 	--color-white: hsl(0 0% 100%);
 }
 
@@ -9,5 +14,11 @@
 	// Semantic colors
 	--color-app-background: var(--color-black);
 	--color-app-text: var(--color-white);
-	--color-app-links: var(--color-turquoise);
+	--color-app-links: var(--color-blue);
+	--color-input-border: var(--color-gray);
+	--color-input-border-focus: var(--color-orange);
+	--color-input-shadow-focus: var(--color-yellow);
+	--color-button-background: var(--color-blue);
+	--color-button-background-active: var(--color-turquoise);
+	--color-button-text: var(--color-app-text);
 }
