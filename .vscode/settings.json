@@ -13,12 +13,12 @@
 	"eslint.validate": ["svelte"],
 	"triggerTaskOnSave.tasks": {
 		"npm: build": [
-			"src/**/*.html",
-			"src/**/*.ts",
-			"src/**/*.scss",
-			"src/**/*.svelte",
-			"vite.config.ts",
-			"static/**/*",
+			"*.html",
+			"*.ts",
+			"scripts/**/*.ts",
+			"scripts/**/*.svelte",
+			"styles/**/*.scss",
+			"public/**/*",
 			".env"
 		]
 	}
