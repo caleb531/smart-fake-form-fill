@@ -6,6 +6,10 @@
 	"icons": {
 		"256": "icons/app-icon.png"
 	},
+	"background": {
+		"service_worker": "service-worker.js",
+		"type": "module"
+	},
 	"action": {
 		"default_icon": "icons/app-icon.png",
 		"default_title": "Smart Fake Form Fill",
