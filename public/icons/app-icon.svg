@@ -1,13 +1,13 @@
 <svg viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- form field lines -->
-    <g stroke="#36f" stroke-width="2">
-        <line x1="10" y1="13" x2="19" y2="13" fill="none"/>
-        <line x1="10" y1="16" x2="19" y2="16" fill="none"/>
-        <line x1="10" y1="19" x2="22" y2="19" fill="none"/>
-    </g>
     <!-- AI aura represented by two overlapping heptagons -->
     <g stroke-width="2" stroke-linejoin="round">
         <polygon points="10.793395130589303,26.81162641482903 4.300865053818116,18.670251207475772 6.618022210383641,8.5181223776952 16,4 25.381977789616357,8.518122377695196 27.699134946181886,18.670251207475772 21.2066048694107,26.81162641482903" fill="none" stroke="#f33" />
         <polygon points="9.491743913236629,29.514533018536287 1.3760813172726465,19.33781400934472 4.272527762979552,6.647652972118999 16,1 27.727472237020443,6.647652972118994 30.623918682727354,19.33781400934471 22.508256086763375,29.514533018536284" fill="none" stroke="#fc3" transform="translate(16,16) rotate(180) translate(-16,-16)" />
+    </g>
+    <!-- form field lines -->
+    <g stroke="#fff" stroke-width="2">
+        <line x1="10" y1="13" x2="19" y2="13" fill="none"/>
+        <line x1="10" y1="16" x2="19" y2="16" fill="none"/>
+        <line x1="10" y1="19" x2="22" y2="19" fill="none"/>
     </g>
 </svg>
