@@ -12,5 +12,5 @@
 		"default_popup": "popup.html"
 	},
 	"options_page": "options.html",
-	"permissions": ["notifications", "storage", "runtime", "activeTab"]
+	"permissions": ["notifications", "storage", "activeTab"]
 }
