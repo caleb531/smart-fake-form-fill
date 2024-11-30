@@ -2,7 +2,9 @@ import type {
 	FieldDefinition,
 	FieldDefinitionGetterRequest,
 	FieldPopulatorRequest,
-	FieldValues
+	FieldValues,
+	PicklistFieldDefinition,
+	TextFieldDefinition
 } from './scripts/types';
 
 let lastSelectedForm: HTMLFormElement | null = null;
@@ -42,22 +44,24 @@ function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 		getTopLevelFieldElements(form)
 			.map((element) => {
 				if (element instanceof HTMLFieldSetElement) {
+					const valueInputs = Array.from(element.querySelectorAll<HTMLInputElement>('input[name]'));
 					return {
 						name: element.name,
 						label: String(element.querySelector('legend')?.textContent),
+						isMultiSelect: valueInputs[0]?.type === 'checkbox' && valueInputs.length > 1,
 						values:
-							Array.from(element.querySelectorAll<HTMLInputElement>('input[name]'))
+							valueInputs
 								.map((input) => {
 									return form.querySelector(`label[for="${input.id}"]`)?.textContent;
 								})
 								.filter((label) => label) ?? []
-					};
+					} as PicklistFieldDefinition;
 				} else {
 					return {
 						name: element.name,
 						...('pattern' in element && element.pattern ? { pattern: element.pattern } : undefined),
 						label: String(form.querySelector(`label[for="${element.id}"]`)?.textContent)
-					};
+					} as TextFieldDefinition;
 				}
 			})
 			// Filter out blank labels

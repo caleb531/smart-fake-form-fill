@@ -1,10 +1,11 @@
-type PicklistFieldDefinition = {
+export type PicklistFieldDefinition = {
 	name: string;
 	label: string | null;
+	isMultiSelect: boolean;
 	values: (string | null | undefined)[];
 };
 
-type TextFieldDefinition = {
+export type TextFieldDefinition = {
 	name: string;
 	label: string | null;
 	pattern?: string;
