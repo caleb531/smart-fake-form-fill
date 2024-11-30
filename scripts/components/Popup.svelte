@@ -1,9 +1,8 @@
 <script lang="ts">
+	import { EXTENSION_PORT_NAME } from '../config';
 	import type {
 		FieldDefinitionGetterRequest,
 		FieldDefinitionGetterResponse,
-		FieldPopulatorRequest,
-		FieldPopulatorResponse,
 		FieldValueGetterRequest,
 		FieldValueGetterResponse
 	} from '../types';
@@ -14,9 +13,25 @@
 	let formError: string | null = $state(null);
 	let processingMessage: string | null = $state(null);
 
+	function handleConnectionMessage(message: FieldValueGetterResponse, activeTab: chrome.tabs.Tab) {
+		console.log('popup received message:', message);
+		// Finally, populate the form fields with the generated fake values
+		// from the LLM
+		// processingMessage = 'Populating fake values into form fields…';
+		// const fieldPopulatorRequest: FieldPopulatorRequest = {
+		// 	action: 'populateFieldsIntoForm',
+		// 	fieldValues: fieldValueGetterResponse.fieldValues
+		// };
+		// const fieldPopulatorResponse: FieldPopulatorResponse = chrome.tabs.sendMessage(
+		// 	activeTab.id,
+		// 	fieldPopulatorRequest
+		// );
+	}
+
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
 		try {
+			const port = chrome.runtime.connect({ name: EXTENSION_PORT_NAME });
 			processingMessage = 'Collecting form field details…';
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
@@ -44,25 +59,10 @@
 				action: 'getFieldValues',
 				fieldDefinitions
 			};
-			const fieldValueGetterResponse: FieldValueGetterResponse =
-				await chrome.runtime.sendMessage(fieldValueGetterRequest);
-			if (fieldValueGetterResponse.errorMessage) {
-				throw new Error(fieldValueGetterResponse.errorMessage);
-			}
-			// Finally, populate the form fields with the generated fake values from
-			// the LLM
-			processingMessage = 'Populating fake values into form fields…';
-			const fieldPopulatorRequest: FieldPopulatorRequest = {
-				action: 'populateFieldsIntoForm',
-				fieldValues: fieldValueGetterResponse.fieldValues
-			};
-			const fieldPopulatorResponse: FieldPopulatorResponse = await chrome.tabs.sendMessage(
-				activeTab.id,
-				fieldPopulatorRequest
-			);
-			if (fieldPopulatorResponse.errorMessage) {
-				throw new Error(fieldPopulatorResponse.errorMessage);
-			}
+			port.postMessage(fieldValueGetterRequest);
+			port.onMessage.addListener((message) => {
+				handleConnectionMessage(message, activeTab);
+			});
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {

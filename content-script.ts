@@ -1,7 +1,9 @@
 import type {
 	FieldDefinition,
 	FieldDefinitionGetterRequest,
+	FieldDefinitionGetterResponse,
 	FieldPopulatorRequest,
+	FieldPopulatorResponse,
 	FieldValues,
 	PicklistFieldDefinition,
 	TextFieldDefinition
@@ -123,7 +125,7 @@ chrome.runtime.onMessage.addListener(
 				const { formSelector } = message as FieldDefinitionGetterRequest;
 				lastSelectedForm = getForm(formSelector);
 				const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
-				sendResponse({ fieldDefinitions });
+				sendResponse({ status: 'success', fieldDefinitions } as FieldDefinitionGetterResponse);
 			} else if (message.action === 'populateFieldsIntoForm') {
 				const { fieldValues } = message as FieldPopulatorRequest;
 				if (!lastSelectedForm) {
@@ -131,7 +133,7 @@ chrome.runtime.onMessage.addListener(
 					return;
 				}
 				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
-				sendResponse({ success: true });
+				sendResponse({ status: 'success' } as FieldPopulatorResponse);
 			}
 		} catch (error) {
 			console.error(error);

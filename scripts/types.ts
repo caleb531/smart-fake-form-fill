@@ -28,14 +28,20 @@ export type FieldPopulatorRequest = {
 	fieldValues: FieldValues;
 };
 
+export type MessageResponseStatus = 'success' | 'partial' | 'error';
+
 export type FieldDefinitionGetterResponse = {
+	status: MessageResponseStatus;
 	fieldDefinitions: FieldDefinition[];
 	errorMessage?: string;
 };
 export type FieldValueGetterResponse = {
-	fieldValues: Record<string, string>;
+	action: 'populateFieldsIntoForm';
+	status: MessageResponseStatus;
+	chunk?: string;
 	errorMessage?: string;
 };
 export type FieldPopulatorResponse = {
+	status: MessageResponseStatus;
 	errorMessage?: string;
 };
