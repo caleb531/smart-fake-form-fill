@@ -35,7 +35,7 @@ function getForm(formSelector: string): HTMLFormElement {
 function getTopLevelFieldElements(form: HTMLFormElement) {
 	return Array.from(
 		form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLFieldSetElement>(
-			'[name]:not(fieldset [name]), fieldset'
+			'[name]:not([readonly]):not([disabled]):not(fieldset [name]), fieldset'
 		)
 	);
 }
