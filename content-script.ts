@@ -110,7 +110,7 @@ async function populateFieldsIntoForm({
 					populateInput(input, true);
 				}
 			});
-		} else if (!Array.isArray(selectedValues)) {
+		} else if (!Array.isArray(selectedValues) && selectedValues) {
 			populateInput(element, selectedValues);
 		}
 	});
