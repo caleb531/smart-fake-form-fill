@@ -22,6 +22,8 @@ async function getCompletions(
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
 		const openai = new OpenAI({ apiKey });
+		console.log('system prompt:', systemPrompt);
+		console.log('field definitions:', message.fieldDefinitions);
 		const completion = await openai.chat.completions.create({
 			model: 'gpt-4o-mini',
 			messages: [
@@ -35,11 +37,13 @@ async function getCompletions(
 				}
 			]
 		});
+		const fieldValues = JSON.parse(
+			unwrapJSONStringFromMarkdown(String(completion.choices[0]?.message.content))
+		);
+		console.log('generated field values:', fieldValues);
 		sendResponse({
 			success: true,
-			fieldValues: JSON.parse(
-				unwrapJSONStringFromMarkdown(String(completion.choices[0]?.message.content))
-			)
+			fieldValues
 		});
 	} catch (error) {
 		console.error(error);
