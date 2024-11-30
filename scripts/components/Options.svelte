@@ -48,7 +48,7 @@
 	{/if}
 	<form onsubmit={submitForm}>
 		<label for="apiKey">OpenAI API Key</label>
-		<input type="password" name="apiKey" id="apiKey" />
+		<input type="password" name="apiKey" id="apiKey" required />
 		<button disabled={justChangedApiKey}>
 			{#if justChangedApiKey}
 				Saved!
