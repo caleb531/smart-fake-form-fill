@@ -25,14 +25,21 @@ function getForm(formSelector: string): HTMLFormElement {
 	return currentElement;
 }
 
+// Get all top-level elements representing form fields, whether an input,
+// textarea, or fieldset; per this definition, inputs within fieldsets are
+// excluded
+function getTopLevelFieldElements(form: HTMLFormElement) {
+	return Array.from(
+		form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLFieldSetElement>(
+			'[name]:not(fieldset [name]), fieldset'
+		)
+	);
+}
+
 // The an array of field definitions to send to the OpenAI API
 function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 	return (
-		Array.from(
-			form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLFieldSetElement>(
-				'[name]:not(fieldset [name]), fieldset'
-			)
-		)
+		getTopLevelFieldElements(form)
 			.map((element) => {
 				if (element instanceof HTMLFieldSetElement) {
 					return {
@@ -58,6 +65,24 @@ function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 	);
 }
 
+// Populate the given input with the given value
+export function populateInput(input: Element | null, value: string | number | boolean) {
+	if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+		if (
+			input instanceof HTMLInputElement &&
+			(input.type === 'checkbox' || input.type === 'radio')
+		) {
+			input.checked = Boolean(value);
+		} else {
+			input.value = String(value);
+		}
+		input.dispatchEvent(new Event('input'));
+		input.dispatchEvent(new Event('change'));
+	} else {
+		throw new Error('Could not find input');
+	}
+}
+
 async function populateFieldsIntoForm({
 	form,
 	fieldValues
@@ -65,16 +90,26 @@ async function populateFieldsIntoForm({
 	form: HTMLFormElement;
 	fieldValues: FieldValues;
 }): Promise<void> {
-	console.log('about to populate fields; fieldValues:', fieldValues);
-	// First store an object literal of the fieldsets within this form, where the
-	// key is the fieldset name and the value is DOM element for that fieldset
-	const fieldsetsByName: Record<string, HTMLFieldSetElement> = Object.fromEntries(
-		Array.from(form.querySelectorAll('fieldset')).map((fieldset) => {
-			return [fieldset.name, fieldset];
-		})
-	);
-	console.log('fieldsetsByName', fieldsetsByName);
-	// Object.entries(fieldValues).forEach(([fieldName, fieldValue]) => {});
+	const topLevelFieldElements = getTopLevelFieldElements(form);
+	topLevelFieldElements.forEach((element) => {
+		const selectedValues = fieldValues[element.name];
+		if (element instanceof HTMLFieldSetElement) {
+			element.querySelectorAll<HTMLInputElement>('input[name]').forEach((input) => {
+				const label = input.labels?.[0]?.textContent;
+				if (!label) {
+					return;
+				}
+				if (
+					selectedValues === label ||
+					(Array.isArray(selectedValues) && selectedValues.includes(label))
+				) {
+					populateInput(input, true);
+				}
+			});
+		} else if (!Array.isArray(selectedValues)) {
+			populateInput(element, selectedValues);
+		}
+	});
 }
 
 chrome.runtime.onMessage.addListener(
@@ -87,7 +122,6 @@ chrome.runtime.onMessage.addListener(
 				sendResponse({ fieldDefinitions });
 			} else if (message.action === 'populateFieldsIntoForm') {
 				const { fieldValues } = message as FieldPopulatorRequest;
-				console.log('fieldValues', fieldValues);
 				if (!lastSelectedForm) {
 					console.log('No form selected; aborting.');
 					return;

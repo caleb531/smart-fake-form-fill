@@ -19,8 +19,6 @@ async function getCompletions(
 	sendResponse: (response?: object) => void
 ) {
 	try {
-		console.log('system prompt:', systemPrompt);
-		console.log('message.data', message.fieldDefinitions);
 		const completion = await openai.chat.completions.create({
 			model: 'gpt-4o-mini',
 			messages: [
