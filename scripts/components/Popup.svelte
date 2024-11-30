@@ -15,6 +15,7 @@
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
 		try {
+			formError = null;
 			processingMessage = 'Collecting form field details…';
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
