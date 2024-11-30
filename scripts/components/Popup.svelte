@@ -8,6 +8,7 @@
 		FieldValueGetterResponse
 	} from '../types';
 	import LoadingIcon from './LoadingIndicator.svelte';
+	import OptionsIcon from './OptionsIcon.svelte';
 
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
@@ -77,6 +78,10 @@
 	<title>Smart Fake Form Fill</title>
 </svelte:head>
 
+<a class="options-link" href="options.html" target="_blank" rel="noreferrer" title="Options"
+	><OptionsIcon /></a
+>
+
 <h1>Smart Fake Form Fill</h1>
 
 <form onsubmit={fillForm}>
@@ -91,7 +96,7 @@
 		{#if processingMessage !== null}
 			<LoadingIcon label={processingMessage} />
 		{:else}
-			<button>Fill Form</button>
+			<button type="submit">Fill Form</button>
 		{/if}
 	</div>
 </form>

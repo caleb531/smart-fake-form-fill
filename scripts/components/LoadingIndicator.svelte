@@ -1,5 +1,5 @@
 <script lang="ts">
-	const { label }: { label: string } = $props();
+	const { label }: { label?: string } = $props();
 </script>
 
 <article class="loading-indicator">

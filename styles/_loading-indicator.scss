@@ -6,6 +6,7 @@
 
 .loading-indicator-icon {
 	fill: none;
+	stroke: var(--color-app-text);
 	animation: loading 1000ms linear infinite;
 }
 

@@ -2,8 +2,6 @@ import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
 import type { FieldDefinition } from './scripts/types';
 
-const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY });
-
 interface CompletionMessage {
 	fieldDefinitions: FieldDefinition[];
 }
@@ -19,6 +17,11 @@ async function getCompletions(
 	sendResponse: (response?: object) => void
 ) {
 	try {
+		const { apiKey } = await chrome.storage.local.get('apiKey');
+		if (!apiKey) {
+			throw new Error('OpenAI API key missing; please define it is the extension settings');
+		}
+		const openai = new OpenAI({ apiKey });
 		const completion = await openai.chat.completions.create({
 			model: 'gpt-4o-mini',
 			messages: [
