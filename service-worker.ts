@@ -3,17 +3,32 @@ import systemPrompt from './prompts/system.txt?raw';
 import type {
 	FieldDefinition,
 	FieldValueGetterRequest,
-	FieldValueGetterResponse
+	FieldValueGetterResponse,
+	FieldValues
 } from './scripts/types';
 
 interface CompletionMessage {
 	fieldDefinitions: FieldDefinition[];
 }
 
-// When the JSON is returned from the OpenAI API, it is wrapped in a Markdown
-// code block; we must unwrap it so we can parse it as JSON
-function unwrapJSONStringFromMarkdown(markdownString: string): string {
-	return markdownString.replace(/^```json\n/, '').replace(/\s*```$/, '');
+function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues | null {
+	try {
+		const fieldValues = JSON.parse(
+			partialJSONString
+				// Remove Markdown code fence wrappers around JSON string
+				.replace(/^```(json)?\n/, '')
+				.replace(/\s*```$/, '')
+				// Close out intermediate JSON object if possible
+				.replace(/,\s*$/, '')
+				.replace(/\}\s*$/, '') + '}'
+		);
+		return fieldValues;
+		/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+	} catch (error) {
+		// There are going to be many errors here as we are parsing the intermediate
+		// JSON, and we don't want to clutter the console
+		return null;
+	}
 }
 
 async function getCompletions(message: CompletionMessage, port: chrome.runtime.Port) {
@@ -39,13 +54,18 @@ async function getCompletions(message: CompletionMessage, port: chrome.runtime.P
 				}
 			]
 		});
+		const chunkParts: string[] = [];
 		for await (const chunk of completionStream) {
+			chunkParts.push(chunk.choices[0]?.delta.content || '');
+			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
 			// console.log('received chunk from OpenAI API:', chunk);
-			port.postMessage({
-				action: 'populateFieldsIntoForm',
-				status: 'partial',
-				chunk: chunk.choices[0]?.delta.content
-			} as FieldValueGetterResponse);
+			if (fieldValues) {
+				port.postMessage({
+					action: 'populateFieldsIntoForm',
+					status: 'partial',
+					fieldValues
+				} as FieldValueGetterResponse);
+			}
 		}
 		port.postMessage({
 			action: 'populateFieldsIntoForm',

@@ -38,8 +38,7 @@ export type FieldDefinitionGetterResponse = {
 export type FieldValueGetterResponse = {
 	action: 'populateFieldsIntoForm';
 	status: MessageResponseStatus;
-	chunk?: string;
-	errorMessage?: string;
+	fieldValues: FieldValues;
 };
 export type FieldPopulatorResponse = {
 	status: MessageResponseStatus;
