@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
 import type {
 	FieldDefinition,
-	FieldValueGetterRequest,
+	FieldPopulatorRequest,
 	FieldValueGetterResponse,
 	FieldValues
 } from './scripts/types';
@@ -31,7 +31,10 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 	}
 }
 
-async function getCompletions(message: CompletionMessage, port: chrome.runtime.Port) {
+async function getCompletions(
+	message: CompletionMessage,
+	sendResponse: (response?: FieldValueGetterResponse) => void
+) {
 	try {
 		const { apiKey } = await chrome.storage.local.get('apiKey');
 		if (!apiKey) {
@@ -40,6 +43,11 @@ async function getCompletions(message: CompletionMessage, port: chrome.runtime.P
 		const openai = new OpenAI({ apiKey });
 		console.log('system prompt:', systemPrompt);
 		console.log('field definitions:', message.fieldDefinitions);
+		const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+		if (!activeTab?.id) {
+			throw new Error('No active tab');
+			return;
+		}
 		const completionStream = await openai.chat.completions.create({
 			model: 'gpt-4o-mini',
 			stream: true,
@@ -58,32 +66,36 @@ async function getCompletions(message: CompletionMessage, port: chrome.runtime.P
 		for await (const chunk of completionStream) {
 			chunkParts.push(chunk.choices[0]?.delta.content || '');
 			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
-			// console.log('received chunk from OpenAI API:', chunk);
-			if (fieldValues) {
-				port.postMessage({
+			if (fieldValues && Object.keys(fieldValues).length > 0) {
+				// Don't send the same field values multiple times (this is safe to do
+				// because the fact that we can parse the JSON means that we are at the
+				// start of a new key-value pair boundary)
+				chunkParts.length = 0;
+				chunkParts.push('{');
+				chrome.tabs.sendMessage(activeTab.id, {
 					action: 'populateFieldsIntoForm',
-					status: 'partial',
 					fieldValues
-				} as FieldValueGetterResponse);
+				} as FieldPopulatorRequest);
 			}
 		}
-		port.postMessage({
-			action: 'populateFieldsIntoForm',
-			status: 'success',
-			fieldValues: {}
-		} as FieldValueGetterResponse);
+		sendResponse({ status: 'success' });
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {
-			port.postMessage({ status: 'error', errorMessage: error.message });
+			sendResponse({ status: 'error', errorMessage: error.message });
 		}
 	}
 }
 
-chrome.runtime.onConnect.addListener((port) => {
-	port.onMessage.addListener((message: FieldValueGetterRequest) => {
-		if (message.action === 'getFieldValues') {
-			getCompletions(message, port);
-		}
-	});
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === 'getFieldValues') {
+		// According to MDN, "Promise as a return value is not supported in Chrome
+		// until Chrome bug 1185241 is resolved. As an alternative, return true and
+		// use sendResponse." (see
+		// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
+		getCompletions(message, sendResponse);
+		return true;
+	}
+	// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
+	return false;
 });

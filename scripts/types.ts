@@ -36,9 +36,9 @@ export type FieldDefinitionGetterResponse = {
 	errorMessage?: string;
 };
 export type FieldValueGetterResponse = {
-	action: 'populateFieldsIntoForm';
 	status: MessageResponseStatus;
-	fieldValues: FieldValues;
+	fieldValues?: FieldValues;
+	errorMessage?: string;
 };
 export type FieldPopulatorResponse = {
 	status: MessageResponseStatus;

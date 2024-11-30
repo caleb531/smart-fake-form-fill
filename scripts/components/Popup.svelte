@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { EXTENSION_PORT_NAME } from '../config';
 	import type {
 		FieldDefinitionGetterRequest,
 		FieldDefinitionGetterResponse,
@@ -13,30 +12,9 @@
 	let formError: string | null = $state(null);
 	let processingMessage: string | null = $state(null);
 
-	function handleConnectionMessage(message: FieldValueGetterResponse, activeTab: chrome.tabs.Tab) {
-		// If all chunks have been received, clear the processing state
-		if (message.status === 'success') {
-			processingMessage = null;
-			return;
-		}
-		console.log('popup received message:', message);
-		// Finally, populate the form fields with the generated fake values
-		// from the LLM
-		// processingMessage = 'Populating fake values into form fields…';
-		// const fieldPopulatorRequest: FieldPopulatorRequest = {
-		// 	action: 'populateFieldsIntoForm',
-		// 	fieldValues: fieldValueGetterResponse.fieldValues
-		// };
-		// const fieldPopulatorResponse: FieldPopulatorResponse = chrome.tabs.sendMessage(
-		// 	activeTab.id,
-		// 	fieldPopulatorRequest
-		// );
-	}
-
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
 		try {
-			const port = chrome.runtime.connect({ name: EXTENSION_PORT_NAME });
 			processingMessage = 'Collecting form field details…';
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
@@ -64,15 +42,17 @@
 				action: 'getFieldValues',
 				fieldDefinitions
 			};
-			port.postMessage(fieldValueGetterRequest);
-			port.onMessage.addListener((message) => {
-				handleConnectionMessage(message, activeTab);
-			});
+			const fieldValueGetterResponse: FieldValueGetterResponse =
+				await chrome.runtime.sendMessage(fieldValueGetterRequest);
+			if (fieldValueGetterResponse.errorMessage) {
+				throw new Error(fieldValueGetterResponse.errorMessage);
+			}
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
 			}
+		} finally {
 			processingMessage = null;
 		}
 	}
