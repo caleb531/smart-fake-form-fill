@@ -76,8 +76,8 @@ export function populateInput(input: Element | null, value: string | number | bo
 		} else {
 			input.value = String(value);
 		}
-		input.dispatchEvent(new Event('input'));
-		input.dispatchEvent(new Event('change'));
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.dispatchEvent(new Event('change', { bubbles: true }));
 	} else {
 		throw new Error('Could not find input');
 	}
@@ -110,7 +110,6 @@ async function populateFieldsIntoForm({
 			populateInput(element, selectedValues);
 		}
 	});
-	form.dispatchEvent(new Event('change'));
 }
 
 chrome.runtime.onMessage.addListener(
