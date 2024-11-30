@@ -11,6 +11,10 @@
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
 	let processingMessage: string | null = $state(null);
+	let justFinishedFillingForm = $state(false);
+	// The number of milliseconds to wait to indicate to the user that the API key
+	// was successfully changed
+	const successDelay = 2000;
 
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
@@ -48,6 +52,10 @@
 			if (fieldValueGetterResponse.errorMessage) {
 				throw new Error(fieldValueGetterResponse.errorMessage);
 			}
+			justFinishedFillingForm = true;
+			setTimeout(() => {
+				justFinishedFillingForm = false;
+			}, successDelay);
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
@@ -81,6 +89,16 @@
 		{#if processingMessage !== null}
 			<LoadingIcon label={processingMessage} />
 		{/if}
-		<button type="submit" data-processing={processingMessage !== null}>Fill Form</button>
+		<button
+			type="submit"
+			data-processing={processingMessage !== null}
+			disabled={justFinishedFillingForm || processingMessage !== null}
+		>
+			{#if justFinishedFillingForm}
+				Done!
+			{:else}
+				Fill Form
+			{/if}
+		</button>
 	</div>
 </form>
