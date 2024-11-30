@@ -14,6 +14,11 @@
 	let processingMessage: string | null = $state(null);
 
 	function handleConnectionMessage(message: FieldValueGetterResponse, activeTab: chrome.tabs.Tab) {
+		// If all chunks have been received, clear the processing state
+		if (message.status === 'success') {
+			processingMessage = null;
+			return;
+		}
 		console.log('popup received message:', message);
 		// Finally, populate the form fields with the generated fake values
 		// from the LLM
@@ -68,7 +73,6 @@
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
 			}
-		} finally {
 			processingMessage = null;
 		}
 	}
