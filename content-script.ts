@@ -110,6 +110,7 @@ async function populateFieldsIntoForm({
 			populateInput(element, selectedValues);
 		}
 	});
+	form.dispatchEvent(new Event('change'));
 }
 
 chrome.runtime.onMessage.addListener(
