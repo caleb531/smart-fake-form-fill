@@ -60,6 +60,8 @@ button {
 	color: var(--color-button-text);
 	font-family: inherit;
 	font-size: 16px;
+	white-space: nowrap;
+	overflow: hidden;
 	&:not([disabled]):hover:active,
 	&:not([disabled]):focus-visible {
 		outline-width: 0;
@@ -67,5 +69,11 @@ button {
 	}
 	&[disabled] {
 		opacity: 0.75;
+	}
+	&[data-processing='true'] {
+		visibility: hidden;
+		width: 0;
+		padding-left: 0;
+		padding-right: 0;
 	}
 }

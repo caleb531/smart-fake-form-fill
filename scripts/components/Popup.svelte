@@ -95,8 +95,7 @@
 	<div class="form-footer">
 		{#if processingMessage !== null}
 			<LoadingIcon label={processingMessage} />
-		{:else}
-			<button type="submit">Fill Form</button>
 		{/if}
+		<button type="submit" data-processing={processingMessage !== null}>Fill Form</button>
 	</div>
 </form>
