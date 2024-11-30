@@ -6,7 +6,7 @@
 	let justChangedApiKey = $state(false);
 	// The number of milliseconds to wait to indicate to the user that the API key
 	// was successfully changed
-	let successDelay = 2000;
+	const successDelay = 2000;
 
 	async function submitForm(event: SubmitEvent) {
 		event.preventDefault();
