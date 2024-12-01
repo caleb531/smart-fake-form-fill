@@ -8,10 +8,6 @@ import type {
 	FieldValues
 } from './scripts/types';
 
-interface CompletionMessage {
-	fieldDefinitions: FieldDefinition[];
-}
-
 function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues | null {
 	try {
 		const fieldValues = JSON.parse(
@@ -32,10 +28,14 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 	}
 }
 
-async function getCompletions(
-	message: CompletionMessage,
-	sendResponse: (response?: FieldValueGetterResponse) => void
-) {
+// Fetch the relevant form values
+async function fetchAndPopulateFormValues({
+	fieldDefinitions,
+	sendResponse
+}: {
+	fieldDefinitions: FieldDefinition[];
+	sendResponse: (response?: FieldValueGetterResponse) => void;
+}) {
 	try {
 		const { apiKey } = await chrome.storage.local.get('apiKey');
 		if (!apiKey) {
@@ -45,7 +45,7 @@ async function getCompletions(
 		const openai = new OpenAI({ apiKey });
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
-		console.log('field definitions:', message.fieldDefinitions);
+		console.log('field definitions:', fieldDefinitions);
 		const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		if (!activeTab?.id) {
 			throw new Error('No active tab');
@@ -61,7 +61,7 @@ async function getCompletions(
 				},
 				{
 					role: 'user',
-					content: `\`\`\`\n${JSON.stringify(message.fieldDefinitions)}\n\`\`\``
+					content: `\`\`\`\n${JSON.stringify(fieldDefinitions)}\n\`\`\``
 				}
 			]
 		});
@@ -96,7 +96,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		// until Chrome bug 1185241 is resolved. As an alternative, return true and
 		// use sendResponse." (see
 		// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
-		getCompletions(message, sendResponse);
+		fetchAndPopulateFormValues({
+			fieldDefinitions: message.fieldDefinitions,
+			sendResponse
+		});
 		return true;
 	}
 	// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
