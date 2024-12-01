@@ -102,3 +102,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
 	return false;
 });
+
+// Open Options page (to enter API key) when extension is first installed
+chrome.runtime.onInstalled.addListener(function (object) {
+	const optionsPageUrl = chrome.runtime.getURL('options.html');
+	if (object.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+		chrome.tabs.create({ url: optionsPageUrl });
+	}
+});
