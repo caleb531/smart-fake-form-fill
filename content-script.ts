@@ -132,6 +132,7 @@ chrome.runtime.onMessage.addListener(
 					console.log('No form selected; aborting.');
 					return;
 				}
+				console.log('Populating fields:', fieldValues);
 				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
 				sendResponse({ status: 'success' } as FieldPopulatorResponse);
 			}
