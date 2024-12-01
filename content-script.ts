@@ -105,9 +105,10 @@ async function populateFieldsIntoForm({
 				if (!label) {
 					return;
 				}
+				const trimmedLabel = label.trim();
 				if (
-					selectedValues === label ||
-					(Array.isArray(selectedValues) && selectedValues.includes(label))
+					selectedValues === trimmedLabel ||
+					(Array.isArray(selectedValues) && selectedValues.includes(trimmedLabel))
 				) {
 					populateInput(input, true);
 				}
