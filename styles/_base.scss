@@ -34,17 +34,27 @@ label {
 	font-size: 14px;
 }
 
+select,
+input[type='text'],
+input[type='password'] {
+	appearance: none;
+	display: block;
+	width: 100%;
+	margin-top: 4px;
+	margin-bottom: 7px;
+	padding: 8px 12px;
+	border: solid 1px var(--color-input-border);
+	border-radius: 4px;
+	font-family: inherit;
+	font-size: 16px;
+}
+
 input[type='text'],
 input[type='password'] {
 	display: block;
 	width: 100%;
 	margin-top: 4px;
 	margin-bottom: 7px;
-	border: solid 1px var(--color-input-border);
-	border-radius: 4px;
-	padding: 8px 12px;
-	font-family: inherit;
-	font-size: 16px;
 	&:not([disabled]):focus {
 		outline-width: 0;
 		border-color: var(--color-input-border-focus);

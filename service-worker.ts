@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
+import { DEFAULT_AI_MODEL } from './scripts/config';
 import type {
 	FieldDefinition,
 	FieldPopulatorRequest,
@@ -40,7 +41,9 @@ async function getCompletions(
 		if (!apiKey) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
+		const model = (await chrome.storage.sync.get('aiModel'))?.aiModel || DEFAULT_AI_MODEL;
 		const openai = new OpenAI({ apiKey });
+		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
 		console.log('field definitions:', message.fieldDefinitions);
 		const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -49,7 +52,7 @@ async function getCompletions(
 			return;
 		}
 		const completionStream = await openai.chat.completions.create({
-			model: 'gpt-4o-mini',
+			model,
 			stream: true,
 			messages: [
 				{
