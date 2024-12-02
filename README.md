@@ -11,3 +11,23 @@ the semantics of the fields they are populating.
 Rather, this extension will send all form metadata (labels, formats, etc.) to
 the LLM so it can produce more realistic fake data (as counterintuitive as that
 sounds).
+
+## Usage
+
+### Build project
+
+```sh
+pnpm install
+pnpm build
+```
+
+### Install from Chrome
+
+Then, open [chrome://extensions](chrome://extensions) and enable **Developer
+mode** in the top-right corner.
+
+Once you see the Developer Mode toolbar appear, click the "Load unpacked"
+button, then choose the `dist/` directory in the repository.
+
+When the extension is installed, you'll need to enter your OpenAI API key to
+start using the extension.
