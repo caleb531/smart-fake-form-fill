@@ -83,12 +83,13 @@ async function fetchAndPopulateFormValues({
 			}
 		}
 		sendResponse({ status: 'success' });
-		await chrome.storage.local.set({ isProcessing: false });
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {
 			sendResponse({ status: 'error', errorMessage: error.message });
 		}
+	} finally {
+		await chrome.storage.local.set({ isProcessing: false });
 	}
 }
 
