@@ -1,51 +1,44 @@
 <script lang="ts">
+	import { debounce } from 'es-toolkit';
 	import { DEFAULT_AI_MODEL } from '../config';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
-	let isLoading = $state(true);
-	let isApiKeySet = $state(false);
-	let aiModel = $state(DEFAULT_AI_MODEL);
-	let justChangedApiKey = $state(false);
-	let justChangedAiModel = $state(false);
+	let savedOptionsPromise: Promise<{ apiKey: string; aiModel: string }> = $state(
+		new Promise((resolve, reject) => {
+			(async () => {
+				try {
+					resolve({
+						apiKey: (await chrome.storage.local.get(['apiKey']))?.apiKey,
+						aiModel: (await chrome.storage.sync.get(['aiModel']))?.aiModel || DEFAULT_AI_MODEL
+					});
+				} catch (error) {
+					reject(error);
+				}
+			})();
+		})
+	);
+
+	let justSaved = $state(false);
+	// The number of milliseconds to wait (after the user stops typing) before
+	// saving the option
+	const saveDelay = 500;
 	// The number of milliseconds to wait to indicate to the user that the API key
 	// was successfully changed
 	const successDelay = 2000;
 
-	async function submitApiKey(event: SubmitEvent) {
-		event.preventDefault();
-		const form = event.target as HTMLFormElement;
-		const apiKey = form.apiKey.value;
-		await chrome.storage.local.set({ apiKey });
-		justChangedApiKey = true;
+	const saveOption = debounce(async (event: Event) => {
+		const input = event.target as HTMLInputElement;
+		await chrome.storage.local.set({ [input.name]: input.value });
+		justSaved = true;
 		setTimeout(() => {
-			justChangedApiKey = false;
+			justSaved = false;
 		}, successDelay);
-	}
+	}, saveDelay);
 
-	async function submitAiModel(event: SubmitEvent) {
+	async function changeOption(event: Event) {
 		event.preventDefault();
-		const form = event.target as HTMLFormElement;
-		const aiModel = form.aiModel.value;
-		await chrome.storage.sync.set({ aiModel });
-		justChangedAiModel = true;
-		setTimeout(() => {
-			justChangedAiModel = false;
-		}, successDelay);
+		saveOption(event);
 	}
-
-	$effect(() => {
-		(async () => {
-			try {
-				const sync = await chrome.storage.sync.get(['aiModel']);
-				const local = await chrome.storage.local.get(['apiKey']);
-				isApiKeySet = Boolean(local.apiKey);
-				aiModel = sync.aiModel || DEFAULT_AI_MODEL;
-				isLoading = false;
-			} finally {
-				isLoading = false;
-			}
-		})();
-	});
 </script>
 
 <svelte:head>
@@ -54,43 +47,27 @@
 
 <h1>Options | Smart Fake Form Fill</h1>
 
-{#await isLoading}
+{#await savedOptionsPromise}
 	<LoadingIndicator />
-{:then}
-	{#if isApiKeySet}
-		<p>OpenAI API key is already set, but you can change it below if needed:</p>
-	{:else}
-		<p>Please set an API key to use this extension:</p>
-	{/if}
-	<form onsubmit={submitApiKey}>
+{:then savedOptions}
+	<form oninput={changeOption}>
 		<p>
 			<label for="apiKey">OpenAI API Key</label>
-			<input type="password" name="apiKey" id="apiKey" required />
-			<button disabled={justChangedApiKey}>
-				{#if justChangedApiKey}
-					Saved!
-				{:else if isApiKeySet}
-					Change API Key
-				{:else}
-					Set API Key
-				{/if}
-			</button>
+			<input type="password" name="apiKey" id="apiKey" required bind:value={savedOptions.apiKey} />
 		</p>
-	</form>
-	<form onsubmit={submitAiModel}>
 		<p>
 			<label for="aiModel">AI Model</label>
-			<select name="aiModel" id="aiModel" bind:value={aiModel}>
+			<select name="aiModel" id="aiModel" bind:value={savedOptions.aiModel}>
 				<option value="gpt-4o-mini">gpt-4o-mini</option>
 				<option value="gpt-4o">gpt-4o</option>
 			</select>
-			<button disabled={justChangedAiModel}>
-				{#if justChangedAiModel}
-					Saved!
-				{:else}
-					Change AI Model
-				{/if}
-			</button>
+		</p>
+		<p class="autosave-hint">
+			{#if justSaved}
+				Saved!
+			{:else}
+				Changes are automatically saved.
+			{/if}
 		</p>
 	</form>
 {/await}
