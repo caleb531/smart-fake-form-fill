@@ -37,6 +37,7 @@ async function fetchAndPopulateFormValues({
 	sendResponse: (response?: FieldValueGetterResponse) => void;
 }) {
 	try {
+		await chrome.storage.local.set({ isProcessing: true });
 		const { apiKey } = await chrome.storage.local.get('apiKey');
 		if (!apiKey) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
@@ -82,6 +83,7 @@ async function fetchAndPopulateFormValues({
 			}
 		}
 		sendResponse({ status: 'success' });
+		await chrome.storage.local.set({ isProcessing: false });
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {

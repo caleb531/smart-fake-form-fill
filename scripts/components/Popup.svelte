@@ -8,6 +8,11 @@
 	import LoadingIcon from './LoadingIndicator.svelte';
 	import OptionsIcon from './OptionsIcon.svelte';
 
+	const MESSAGES = {
+		COLLECTING_DETAILS: 'Collecting form field details…',
+		GENERATING_VALUES: 'Generating smart fake values with AI…'
+	};
+
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
 	let processingMessage: string | null = $state(null);
@@ -20,7 +25,7 @@
 		event.preventDefault();
 		try {
 			formError = null;
-			processingMessage = 'Collecting form field details…';
+			processingMessage = MESSAGES.COLLECTING_DETAILS;
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
 				console.log('no active tab');
@@ -42,7 +47,7 @@
 			const { fieldDefinitions } = fieldDefGetterResponse;
 			// Once we have the field definitions, send them to OpenAI to generate
 			// fake values for the respective fields
-			processingMessage = 'Generating smart fake values with AI…';
+			processingMessage = MESSAGES.GENERATING_VALUES;
 			const fieldValueGetterRequest: FieldValueGetterRequest = {
 				action: 'getFieldValues',
 				fieldDefinitions
@@ -65,6 +70,15 @@
 			processingMessage = null;
 		}
 	}
+
+	$effect(() => {
+		(async () => {
+			const local = await chrome.storage.local.get(['isProcessing']);
+			if (local.isProcessing) {
+				processingMessage = MESSAGES.GENERATING_VALUES;
+			}
+		})();
+	});
 </script>
 
 <svelte:head>
