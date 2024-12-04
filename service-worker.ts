@@ -61,10 +61,14 @@ async function fetchAndPopulateFormValues({
 					role: 'system',
 					content: systemPrompt
 				},
-				{
-					role: 'system',
-					content: custom_instructions?.toString() || ''
-				},
+				...(custom_instructions
+					? [
+							{
+								role: 'system',
+								content: custom_instructions?.toString() || ''
+							} as const
+						]
+					: []),
 				{
 					role: 'user',
 					content: `\`\`\`\n${JSON.stringify(fieldDefinitions)}\n\`\`\``
