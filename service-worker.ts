@@ -39,6 +39,7 @@ async function fetchAndPopulateFormValues({
 	try {
 		await chrome.storage.local.set({ isProcessing: true });
 		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
+		const { custom_instructions } = await chrome.storage.sync.get('custom_instructions');
 		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
@@ -59,6 +60,10 @@ async function fetchAndPopulateFormValues({
 				{
 					role: 'system',
 					content: systemPrompt
+				},
+				{
+					role: 'system',
+					content: custom_instructions?.toString() || ''
 				},
 				{
 					role: 'user',

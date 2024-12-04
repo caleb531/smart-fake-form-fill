@@ -36,7 +36,8 @@ label {
 
 select,
 input[type='text'],
-input[type='password'] {
+input[type='password'],
+textarea {
 	appearance: none;
 	display: block;
 	width: 100%;

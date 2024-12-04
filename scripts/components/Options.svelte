@@ -3,14 +3,18 @@
 	import { DEFAULT_AI_MODEL } from '../config';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
-	let savedOptionsPromise: Promise<{ openai_api_key: string; openai_model: string }> = $state(
+	type SavedOptions = { openai_api_key: string; openai_model: string; custom_instructions: string };
+
+	let savedOptionsPromise: Promise<SavedOptions> = $state(
 		new Promise((resolve, reject) => {
 			(async () => {
 				try {
 					resolve({
 						openai_api_key: (await chrome.storage.local.get(['openai_api_key']))?.openai_api_key,
 						openai_model:
-							(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_AI_MODEL
+							(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_AI_MODEL,
+						custom_instructions:
+							(await chrome.storage.sync.get(['custom_instructions']))?.custom_instructions || ''
 					});
 				} catch (error) {
 					reject(error);
@@ -29,7 +33,11 @@
 
 	const saveOption = debounce(async (event: Event) => {
 		const input = event.target as HTMLInputElement;
-		await chrome.storage.local.set({ [input.name]: input.value });
+		if (input.name === 'openai_api_key') {
+			await chrome.storage.local.set({ openai_api_key: input.value });
+		} else {
+			await chrome.storage.sync.set({ [input.name]: input.value });
+		}
 		justSaved = true;
 		setTimeout(() => {
 			justSaved = false;
@@ -68,6 +76,15 @@
 				<option value="gpt-4o-mini">gpt-4o-mini</option>
 				<option value="gpt-4o">gpt-4o</option>
 			</select>
+		</p>
+		<p>
+			<label for="custom_instructions">Custom Instructions</label>
+			<textarea
+				name="custom_instructions"
+				id="custom_instructions"
+				required
+				bind:value={savedOptions.custom_instructions}
+			></textarea>
 		</p>
 		<p class="autosave-hint">
 			{#if justSaved}
