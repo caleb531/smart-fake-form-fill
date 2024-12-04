@@ -3,13 +3,14 @@
 	import { DEFAULT_AI_MODEL } from '../config';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
-	let savedOptionsPromise: Promise<{ apiKey: string; aiModel: string }> = $state(
+	let savedOptionsPromise: Promise<{ openai_api_key: string; openai_model: string }> = $state(
 		new Promise((resolve, reject) => {
 			(async () => {
 				try {
 					resolve({
-						apiKey: (await chrome.storage.local.get(['apiKey']))?.apiKey,
-						aiModel: (await chrome.storage.sync.get(['aiModel']))?.aiModel || DEFAULT_AI_MODEL
+						openai_api_key: (await chrome.storage.local.get(['openai_api_key']))?.openai_api_key,
+						openai_model:
+							(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_AI_MODEL
 					});
 				} catch (error) {
 					reject(error);
@@ -52,12 +53,18 @@
 {:then savedOptions}
 	<form oninput={changeOption}>
 		<p>
-			<label for="apiKey">OpenAI API Key</label>
-			<input type="password" name="apiKey" id="apiKey" required bind:value={savedOptions.apiKey} />
+			<label for="openai_api_key">OpenAI API Key</label>
+			<input
+				type="password"
+				name="openai_api_key"
+				id="openai_api_key"
+				required
+				bind:value={savedOptions.openai_api_key}
+			/>
 		</p>
 		<p>
-			<label for="aiModel">AI Model</label>
-			<select name="aiModel" id="aiModel" bind:value={savedOptions.aiModel}>
+			<label for="openai_model">AI Model</label>
+			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model}>
 				<option value="gpt-4o-mini">gpt-4o-mini</option>
 				<option value="gpt-4o">gpt-4o</option>
 			</select>

@@ -38,12 +38,12 @@ async function fetchAndPopulateFormValues({
 }) {
 	try {
 		await chrome.storage.local.set({ isProcessing: true });
-		const { apiKey } = await chrome.storage.local.get('apiKey');
-		if (!apiKey) {
+		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
+		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
-		const model = (await chrome.storage.sync.get('aiModel'))?.aiModel || DEFAULT_AI_MODEL;
-		const openai = new OpenAI({ apiKey });
+		const model = (await chrome.storage.sync.get('openai_model'))?.openai_model || DEFAULT_AI_MODEL;
+		const openai = new OpenAI({ apiKey: openai_api_key });
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
 		console.log('field definitions:', fieldDefinitions);
