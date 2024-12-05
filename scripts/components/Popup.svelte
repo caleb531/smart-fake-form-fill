@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { FIELD_VALUE_GETTER_PORT_NAME } from '../config';
 	import type {
 		FieldDefinitionGetterRequest,
 		FieldDefinitionGetterResponse,
@@ -23,6 +25,7 @@
 
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
+		const port = chrome.runtime.connect({ name: FIELD_VALUE_GETTER_PORT_NAME });
 		try {
 			formError = null;
 			processingMessage = MESSAGES.COLLECTING_DETAILS;
@@ -52,25 +55,18 @@
 				action: 'getFieldValues',
 				fieldDefinitions
 			};
-			const fieldValueGetterResponse: FieldValueGetterResponse =
-				await chrome.runtime.sendMessage(fieldValueGetterRequest);
-			if (fieldValueGetterResponse.errorMessage) {
-				throw new Error(fieldValueGetterResponse.errorMessage);
-			}
-			justFinishedFillingForm = true;
-			setTimeout(() => {
-				justFinishedFillingForm = false;
-			}, successDelay);
+			port.postMessage(fieldValueGetterRequest);
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
 			}
-		} finally {
 			processingMessage = null;
 		}
 	}
 
+	// Show processing state if popup was closed and reopened while service worker
+	// is still generating jobs
 	$effect(() => {
 		(async () => {
 			const local = await chrome.storage.local.get(['isProcessing']);
@@ -78,6 +74,33 @@
 				processingMessage = MESSAGES.GENERATING_VALUES;
 			}
 		})();
+	});
+
+	// Show success state when service worker has finished generating fake form
+	// values
+	onMount(() => {
+		console.log('on mount!');
+		chrome.runtime.onConnect.addListener((port) => {
+			console.log('port name', port.name);
+			if (port.name !== FIELD_VALUE_GETTER_PORT_NAME) {
+				return;
+			}
+			port.onMessage.addListener((message: FieldValueGetterResponse) => {
+				console.log('receive port message on popup side:', message);
+				if (message.status === 'success') {
+					console.log('receive success');
+					justFinishedFillingForm = true;
+					processingMessage = null;
+					setTimeout(() => {
+						justFinishedFillingForm = false;
+					}, successDelay);
+				} else if (message.status === 'error') {
+					console.log('receive error', message);
+					formError = message.errorMessage || 'An unknown error occurred';
+					processingMessage = null;
+				}
+			});
+		});
 	});
 </script>
 

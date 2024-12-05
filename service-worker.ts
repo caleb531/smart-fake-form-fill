@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
-import { DEFAULT_AI_MODEL } from './scripts/config';
+import { DEFAULT_AI_MODEL, FIELD_VALUE_GETTER_PORT_NAME } from './scripts/config';
 import type {
 	FieldDefinition,
 	FieldPopulatorRequest,
@@ -31,10 +31,10 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 // Fetch the relevant form values
 async function fetchAndPopulateFormValues({
 	fieldDefinitions,
-	sendResponse
+	postMessage
 }: {
 	fieldDefinitions: FieldDefinition[];
-	sendResponse: (response?: FieldValueGetterResponse) => void;
+	postMessage: (message: FieldValueGetterResponse) => void;
 }) {
 	try {
 		await chrome.storage.local.set({ isProcessing: true });
@@ -91,31 +91,40 @@ async function fetchAndPopulateFormValues({
 				} as FieldPopulatorRequest);
 			}
 		}
-		sendResponse({ status: 'success' });
+		console.log('send success');
+		postMessage({ status: 'success' });
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {
-			sendResponse({ status: 'error', errorMessage: error.message });
+			postMessage({ status: 'error', errorMessage: error.message });
 		}
 	} finally {
 		await chrome.storage.local.set({ isProcessing: false });
 	}
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === 'getFieldValues') {
-		// According to MDN, "Promise as a return value is not supported in Chrome
-		// until Chrome bug 1185241 is resolved. As an alternative, return true and
-		// use sendResponse." (see
-		// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
-		fetchAndPopulateFormValues({
-			fieldDefinitions: message.fieldDefinitions,
-			sendResponse
-		});
-		return true;
+chrome.runtime.onConnect.addListener((port) => {
+	if (port.name !== FIELD_VALUE_GETTER_PORT_NAME) {
+		return;
 	}
-	// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
-	return false;
+	port.onMessage.addListener((message) => {
+		if (message.action === 'getFieldValues') {
+			console.log('here we go!');
+			// According to MDN, "Promise as a return value is not supported in Chrome
+			// until Chrome bug 1185241 is resolved. As an alternative, return true and
+			// use sendResponse." (see
+			// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
+			fetchAndPopulateFormValues({
+				fieldDefinitions: message.fieldDefinitions,
+				postMessage: (message) => {
+					port.postMessage(message);
+				}
+			});
+			return true;
+		}
+		// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
+		return false;
+	});
 });
 
 // Open Options page (to enter API key) when extension is first installed
