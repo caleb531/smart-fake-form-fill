@@ -77,6 +77,13 @@
 			if (local.isProcessing) {
 				processingMessage = MESSAGES.GENERATING_VALUES;
 			}
+			// Hide processing state when the process is done, even if popup has been
+			// closed/reopened since job was started
+			chrome.storage.onChanged.addListener((changes) => {
+				if (changes.isProcessing) {
+					processingMessage = changes.isProcessing.newValue ? MESSAGES.GENERATING_VALUES : null;
+				}
+			});
 		})();
 	});
 </script>
