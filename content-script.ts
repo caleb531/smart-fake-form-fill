@@ -61,6 +61,7 @@ function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
 				} else {
 					return {
 						name: element.name,
+						type: element.type && element.type !== 'text' ? element.type : undefined,
 						...('pattern' in element && element.pattern ? { pattern: element.pattern } : undefined),
 						label: String(form.querySelector(`label[for="${element.id}"]`)?.textContent)
 					} as TextFieldDefinition;
