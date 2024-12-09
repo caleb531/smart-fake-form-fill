@@ -122,4 +122,5 @@
 			{/if}
 		</button>
 	</div>
+	<p class="hint">You can also right-click on a form to fill.</p>
 </form>
