@@ -63,6 +63,11 @@ input[type='password'] {
 	}
 }
 
+textarea {
+	min-height: 100px;
+	resize: vertical;
+}
+
 button {
 	border-width: 0;
 	border-radius: 3px;
