@@ -97,5 +97,7 @@
 			</button>
 		{/if}
 	</div>
-	<p class="hint">You can also right-click on a form to fill.</p>
+	{#if processingMessage === null && !justFinishedFillingForm}
+		<p class="hint">You can also right-click on a form to fill.</p>
+	{/if}
 </form>
