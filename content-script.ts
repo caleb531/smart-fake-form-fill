@@ -181,33 +181,43 @@ async function fillForm({
 	return fieldValueGetterResponse;
 }
 
+// Write handleMessage()
+async function handleMessage({
+	message,
+	sendResponse
+}: {
+	message: FormFillerRequest | FieldDefinitionGetterRequest | FieldPopulatorRequest;
+	sendResponse: (response: FormFillerResponse | FieldPopulatorResponse) => void;
+}) {
+	try {
+		if (message.action === 'fillForm') {
+			const { formSelector } = message as FormFillerRequest;
+			sendResponse(await fillForm({ formSelector }));
+		} else if (message.action === 'populateFieldsIntoForm') {
+			const { fieldValues } = message as FieldPopulatorRequest;
+			if (!lastSelectedForm) {
+				console.log('No form selected; aborting.');
+				return;
+			}
+			console.log('Populating fields:', fieldValues);
+			populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
+			sendResponse({ status: 'success' } as FieldPopulatorResponse);
+		}
+	} catch (error) {
+		console.error(error);
+		if (error instanceof Error) {
+			sendResponse({ status: 'error', errorMessage: error.message });
+		}
+	}
+}
+
 chrome.runtime.onMessage.addListener(
 	(
 		message: FormFillerRequest | FieldDefinitionGetterRequest | FieldPopulatorRequest,
 		sender,
 		sendResponse
 	) => {
-		try {
-			if (message.action === 'fillForm') {
-				const { formSelector } = message as FormFillerRequest;
-				sendResponse(fillForm({ formSelector }));
-			} else if (message.action === 'populateFieldsIntoForm') {
-				const { fieldValues } = message as FieldPopulatorRequest;
-				if (!lastSelectedForm) {
-					console.log('No form selected; aborting.');
-					return;
-				}
-				console.log('Populating fields:', fieldValues);
-				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
-				sendResponse({ status: 'success' } as FieldPopulatorResponse);
-			}
-		} catch (error) {
-			console.error(error);
-			if (error instanceof Error) {
-				sendResponse({ errorMessage: error.message });
-			}
-		} finally {
-			chrome.storage.local.set({ processingMessage: null });
-		}
+		handleMessage({ message, sendResponse });
+		return true;
 	}
 );

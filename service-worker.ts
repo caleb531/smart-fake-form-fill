@@ -50,7 +50,6 @@ async function fetchAndPopulateFormValues({
 		const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		if (!activeTab?.id) {
 			throw new Error('No active tab');
-			return;
 		}
 		const completionStream = await openai.chat.completions.create({
 			model,
@@ -96,6 +95,8 @@ async function fetchAndPopulateFormValues({
 		if (error instanceof Error) {
 			sendResponse({ status: 'error', errorMessage: error.message });
 		}
+	} finally {
+		chrome.storage.local.set({ processingMessage: null });
 	}
 }
 

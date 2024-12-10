@@ -40,9 +40,8 @@
 			console.error(error);
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
+				processingMessage = null;
 			}
-		} finally {
-			processingMessage = null;
 		}
 	}
 
@@ -55,7 +54,6 @@
 			// Hide processing state when the process is done, even if popup has been
 			// closed/reopened since job was started
 			chrome.storage.onChanged.addListener((changes) => {
-				console.log('processingMessage', processingMessage);
 				if (changes.processingMessage) {
 					processingMessage = changes.processingMessage.newValue;
 				}
@@ -85,18 +83,19 @@
 	<div class="form-footer">
 		{#if processingMessage !== null}
 			<LoadingIcon label={processingMessage} />
+		{:else}
+			<button
+				type="submit"
+				data-processing={processingMessage !== null}
+				disabled={justFinishedFillingForm || processingMessage !== null}
+			>
+				{#if justFinishedFillingForm}
+					Done!
+				{:else}
+					Fill Form
+				{/if}
+			</button>
 		{/if}
-		<button
-			type="submit"
-			data-processing={processingMessage !== null}
-			disabled={justFinishedFillingForm || processingMessage !== null}
-		>
-			{#if justFinishedFillingForm}
-				Done!
-			{:else}
-				Fill Form
-			{/if}
-		</button>
 	</div>
 	<p class="hint">You can also right-click on a form to fill.</p>
 </form>
