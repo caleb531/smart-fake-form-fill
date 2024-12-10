@@ -1,5 +1,6 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
+import webExtension from 'vite-plugin-web-extension';
 
 export default defineConfig({
 	css: {
@@ -9,18 +10,5 @@ export default defineConfig({
 			}
 		}
 	},
-	plugins: [svelte()],
-	build: {
-		rollupOptions: {
-			input: {
-				popup: 'popup.html',
-				options: 'options.html',
-				'service-worker': 'service-worker.ts',
-				'content-script': 'content-script.ts'
-			},
-			output: {
-				entryFileNames: '[name].js' // Ensures proper file naming
-			}
-		}
-	}
+	plugins: [svelte(), webExtension()]
 });
