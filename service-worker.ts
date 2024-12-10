@@ -37,7 +37,6 @@ async function fetchAndPopulateFormValues({
 	sendResponse: (response?: FieldValueGetterResponse) => void;
 }) {
 	try {
-		await chrome.storage.local.set({ isProcessing: true });
 		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
 		const { custom_instructions } = await chrome.storage.sync.get('custom_instructions');
 		if (!openai_api_key) {
@@ -97,8 +96,6 @@ async function fetchAndPopulateFormValues({
 		if (error instanceof Error) {
 			sendResponse({ status: 'error', errorMessage: error.message });
 		}
-	} finally {
-		await chrome.storage.local.set({ isProcessing: false });
 	}
 }
 
@@ -118,10 +115,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	return false;
 });
 
-// Open Options page (to enter API key) when extension is first installed
-chrome.runtime.onInstalled.addListener(function (object) {
+chrome.runtime.onInstalled.addListener((object) => {
+	// Add context menu item for selecting/populating form via right-click
+	chrome.contextMenus.create({
+		id: 'populateFieldsIntoForm',
+		title: 'Smart Fake Form Fill',
+		contexts: ['page', 'editable', 'selection']
+	});
+	// Open Options page (to enter API key) when extension is first installed
 	const optionsPageUrl = chrome.runtime.getURL('options.html');
 	if (object.reason === chrome.runtime.OnInstalledReason.INSTALL) {
 		chrome.tabs.create({ url: optionsPageUrl });
+	}
+});
+
+// When the user chooses the extension's context menu item, send a message to
+// the content script to fill the form
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+	if (info.menuItemId === 'populateFieldsIntoForm' && tab?.id) {
+		chrome.tabs.sendMessage(tab.id, { action: 'fillForm' });
 	}
 });

@@ -1,17 +1,27 @@
 import type {
 	FieldDefinition,
 	FieldDefinitionGetterRequest,
-	FieldDefinitionGetterResponse,
 	FieldPopulatorRequest,
 	FieldPopulatorResponse,
+	FieldValueGetterRequest,
+	FieldValueGetterResponse,
 	FieldValues,
+	FormFillerRequest,
+	FormFillerResponse,
 	PicklistFieldDefinition,
 	TextFieldDefinition
 } from './scripts/types';
 
-let lastSelectedForm: HTMLFormElement | null = null;
+// The messages to display in the UI
+export const MESSAGES = {
+	PROCESSING: 'Generating smart fake values with AI…'
+} as const;
 
-function getForm(formSelector: string): HTMLFormElement {
+let lastSelectedForm: HTMLFormElement | null = null;
+let lastRightClickedElement: Element | null = null;
+
+// Get the form DOM element from the given CSS selector
+function getFormFromSelector(formSelector: string): HTMLFormElement {
 	const selectorParts = formSelector.split('::shadow-root');
 	let currentElement: Element | null = document.body;
 	selectorParts.forEach((selectorPart) => {
@@ -27,6 +37,11 @@ function getForm(formSelector: string): HTMLFormElement {
 		throw new Error('Selected element is not a form element');
 	}
 	return currentElement;
+}
+
+// Get the form element ancestor of the last-clicked element
+function getFormFromLastClickedElement() {
+	return lastRightClickedElement?.closest('form') ?? null;
 }
 
 // Get all top-level elements representing form fields, whether an input,
@@ -120,14 +135,62 @@ async function populateFieldsIntoForm({
 	});
 }
 
+// Keep track of which element we last right-clicked so we determine which form
+// to fill if the user selects the extension menu item from the context menu
+document.addEventListener('contextmenu', (event) => {
+	// The elment we click may be inside a shadow DOM tree, so we need to
+	// recursively descend through each shadow boundary until we arrive at the
+	// actual clicked element (with a cutoff to prevent infinite loops)
+	let attempts = 0;
+	const MAX_ATTEMPTS = 10;
+	do {
+		lastRightClickedElement = event.target as HTMLElement;
+		const shadowRoot = lastRightClickedElement.shadowRoot;
+		if (shadowRoot) {
+			lastRightClickedElement = shadowRoot.elementFromPoint(event.clientX, event.clientY);
+			attempts += 1;
+		}
+	} while (lastRightClickedElement?.shadowRoot && attempts < MAX_ATTEMPTS);
+});
+
+// The orchestration logic for the form-filling functionality
+async function fillForm({
+	formSelector
+}: {
+	formSelector: string | undefined;
+}): Promise<FormFillerResponse> {
+	lastSelectedForm = formSelector
+		? getFormFromSelector(formSelector)
+		: getFormFromLastClickedElement();
+	if (!lastSelectedForm) {
+		throw new Error('Cannot find form element; aborting.');
+	}
+	await chrome.storage.local.set({ processingMessage: MESSAGES.PROCESSING });
+	const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
+	// Once we have the field definitions, send them to OpenAI to generate
+	// fake values for the respective fields
+	const fieldValueGetterRequest: FieldValueGetterRequest = {
+		action: 'getFieldValues',
+		fieldDefinitions
+	};
+	const fieldValueGetterResponse: FieldValueGetterResponse =
+		await chrome.runtime.sendMessage(fieldValueGetterRequest);
+	if (fieldValueGetterResponse.errorMessage) {
+		throw new Error(fieldValueGetterResponse.errorMessage);
+	}
+	return fieldValueGetterResponse;
+}
+
 chrome.runtime.onMessage.addListener(
-	(message: FieldDefinitionGetterRequest | FieldPopulatorRequest, sender, sendResponse) => {
+	(
+		message: FormFillerRequest | FieldDefinitionGetterRequest | FieldPopulatorRequest,
+		sender,
+		sendResponse
+	) => {
 		try {
-			if (message.action === 'getFieldDefinitions') {
-				const { formSelector } = message as FieldDefinitionGetterRequest;
-				lastSelectedForm = getForm(formSelector);
-				const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
-				sendResponse({ status: 'success', fieldDefinitions } as FieldDefinitionGetterResponse);
+			if (message.action === 'fillForm') {
+				const { formSelector } = message as FormFillerRequest;
+				sendResponse(fillForm({ formSelector }));
 			} else if (message.action === 'populateFieldsIntoForm') {
 				const { fieldValues } = message as FieldPopulatorRequest;
 				if (!lastSelectedForm) {
@@ -143,6 +206,8 @@ chrome.runtime.onMessage.addListener(
 			if (error instanceof Error) {
 				sendResponse({ errorMessage: error.message });
 			}
+		} finally {
+			chrome.storage.local.set({ processingMessage: null });
 		}
 	}
 );

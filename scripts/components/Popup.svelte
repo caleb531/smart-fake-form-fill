@@ -1,17 +1,7 @@
 <script lang="ts">
-	import type {
-		FieldDefinitionGetterRequest,
-		FieldDefinitionGetterResponse,
-		FieldValueGetterRequest,
-		FieldValueGetterResponse
-	} from '../types';
+	import type { FormFillerRequest, FormFillerResponse } from '../types';
 	import LoadingIcon from './LoadingIndicator.svelte';
 	import OptionsIcon from './OptionsIcon.svelte';
-
-	const MESSAGES = {
-		COLLECTING_DETAILS: 'Collecting form field details…',
-		GENERATING_VALUES: 'Generating smart fake values with AI…'
-	};
 
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
@@ -25,7 +15,6 @@
 		event.preventDefault();
 		try {
 			formError = null;
-			processingMessage = MESSAGES.COLLECTING_DETAILS;
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
 				console.log('no active tab');
@@ -33,29 +22,16 @@
 			}
 			// First, collect the field definitions for the form matching the given
 			// selector, throwing an error if the form cannot be found
-			const fieldDefGetterRequest: FieldDefinitionGetterRequest = {
-				action: 'getFieldDefinitions',
+			const formFillerRequest: FormFillerRequest = {
+				action: 'fillForm',
 				formSelector
 			};
-			const fieldDefGetterResponse: FieldDefinitionGetterResponse = await chrome.tabs.sendMessage(
+			const formFillerResponse: FormFillerResponse = await chrome.tabs.sendMessage(
 				activeTab.id,
-				fieldDefGetterRequest
+				formFillerRequest
 			);
-			if (fieldDefGetterResponse.errorMessage) {
-				throw new Error(fieldDefGetterResponse.errorMessage);
-			}
-			const { fieldDefinitions } = fieldDefGetterResponse;
-			// Once we have the field definitions, send them to OpenAI to generate
-			// fake values for the respective fields
-			processingMessage = MESSAGES.GENERATING_VALUES;
-			const fieldValueGetterRequest: FieldValueGetterRequest = {
-				action: 'getFieldValues',
-				fieldDefinitions
-			};
-			const fieldValueGetterResponse: FieldValueGetterResponse =
-				await chrome.runtime.sendMessage(fieldValueGetterRequest);
-			if (fieldValueGetterResponse.errorMessage) {
-				throw new Error(fieldValueGetterResponse.errorMessage);
+			if (formFillerResponse.errorMessage) {
+				throw new Error(formFillerResponse.errorMessage);
 			}
 			justFinishedFillingForm = true;
 			setTimeout(() => {
@@ -73,15 +49,15 @@
 
 	$effect(() => {
 		(async () => {
-			const local = await chrome.storage.local.get(['isProcessing']);
-			if (local.isProcessing) {
-				processingMessage = MESSAGES.GENERATING_VALUES;
+			const local = await chrome.storage.local.get(['processingMessage']);
+			if (local.processingMessage) {
+				processingMessage = local.processingMessage;
 			}
 			// Hide processing state when the process is done, even if popup has been
 			// closed/reopened since job was started
 			chrome.storage.onChanged.addListener((changes) => {
-				if (changes.isProcessing) {
-					processingMessage = changes.isProcessing.newValue ? MESSAGES.GENERATING_VALUES : null;
+				if (changes.processingMessage) {
+					processingMessage = changes.processingMessage.newValue;
 				}
 			});
 		})();

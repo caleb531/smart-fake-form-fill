@@ -15,6 +15,10 @@ export type FieldDefinition = PicklistFieldDefinition | TextFieldDefinition;
 
 export type FieldValues = Record<string, string | string[]>;
 
+export type FormFillerRequest = {
+	action: 'fillForm';
+	formSelector?: string;
+};
 export type FieldDefinitionGetterRequest = {
 	action: 'getFieldDefinitions';
 	formSelector: string;
@@ -40,6 +44,7 @@ export type FieldValueGetterResponse = {
 	fieldValues?: FieldValues;
 	errorMessage?: string;
 };
+export type FormFillerResponse = FieldValueGetterResponse;
 export type FieldPopulatorResponse = {
 	status: MessageResponseStatus;
 	errorMessage?: string;
