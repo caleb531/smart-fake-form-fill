@@ -7,6 +7,7 @@ export type PicklistFieldDefinition = {
 
 export type TextFieldDefinition = {
 	name: string;
+	type?: string;
 	label: string | null;
 	pattern?: string;
 };
