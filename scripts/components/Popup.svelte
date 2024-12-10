@@ -17,8 +17,7 @@
 			formError = null;
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
-				console.log('no active tab');
-				return;
+				throw new Error('No active tab');
 			}
 			// First, collect the field definitions for the form matching the given
 			// selector, throwing an error if the form cannot be found
@@ -56,6 +55,7 @@
 			// Hide processing state when the process is done, even if popup has been
 			// closed/reopened since job was started
 			chrome.storage.onChanged.addListener((changes) => {
+				console.log('processingMessage', processingMessage);
 				if (changes.processingMessage) {
 					processingMessage = changes.processingMessage.newValue;
 				}
