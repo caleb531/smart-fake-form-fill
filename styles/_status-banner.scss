@@ -20,7 +20,7 @@
 	left: 0;
 	width: 100%;
 	z-index: 99999999;
-	padding: 10px 15px;
+	padding: 12px 15px;
 	background-color: var(--color-app-background);
 	color: var(--color-app-text);
 	line-height: 1;
@@ -41,7 +41,7 @@
 	align-items: center;
 	font-size: 16px;
 	.loading-indicator-icon {
-		width: 24px;
+		width: 16px;
 		stroke-width: 30;
 	}
 }
