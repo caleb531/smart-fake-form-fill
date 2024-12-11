@@ -7,6 +7,7 @@
 
 .status-banner {
 	display: flex;
+	align-items: center;
 	gap: 0 20px;
 	flex-wrap: wrap;
 	position: fixed;
@@ -26,5 +27,14 @@
 		margin: 0;
 		font-size: 1.5rem;
 		font-weight: bold;
+	}
+}
+
+.status-banner-status {
+	display: flex;
+	align-items: center;
+	.loading-indicator-icon {
+		width: 24px;
+		stroke-width: 30;
 	}
 }
