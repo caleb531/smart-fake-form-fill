@@ -225,13 +225,19 @@ chrome.runtime.onMessage.addListener(
 	}
 );
 
+// Append the extension UI to the current page
 async function appendUIToPage() {
+	// Create a shadow DOM container to hold the extension UI
 	const shadowContainer = document.createElement('div');
 	shadowContainer.classList.add('sfff-root');
 	shadowContainer.style.display = 'block';
 	shadowContainer.attachShadow({ mode: 'open' });
 	document.body.appendChild(shadowContainer);
 	if (shadowContainer.shadowRoot) {
+		// Normally, importing a *.css or *.scss file in a Svelte component appends
+		// the stylesheet to the document head, even if the component is mounted
+		// within a shadow DOM; to solve this, we create a <style> element within
+		// the shadow DOM and insert the processed CSS contents into it
 		const style = document.createElement('style');
 		style.textContent = contentScriptUICSS;
 		shadowContainer.shadowRoot.appendChild(style);
@@ -240,5 +246,4 @@ async function appendUIToPage() {
 		mount(ContentScriptUI, { target: shadowContainerMain });
 	}
 }
-
 appendUIToPage();
