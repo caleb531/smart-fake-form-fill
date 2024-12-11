@@ -47,7 +47,7 @@
 
 	$effect(() => {
 		(async () => {
-			const local = await chrome.storage.local.get(['processingMessage']);
+			const local = await chrome.storage.local.get('processingMessage');
 			if (local.processingMessage) {
 				processingMessage = local.processingMessage;
 			}

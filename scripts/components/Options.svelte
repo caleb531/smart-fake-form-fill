@@ -10,7 +10,7 @@
 			(async () => {
 				try {
 					resolve({
-						openai_api_key: (await chrome.storage.local.get(['openai_api_key']))?.openai_api_key,
+						openai_api_key: (await chrome.storage.local.get('openai_api_key'))?.openai_api_key,
 						openai_model:
 							(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_AI_MODEL,
 						custom_instructions:
