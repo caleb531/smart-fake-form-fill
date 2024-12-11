@@ -1,3 +1,5 @@
+import { mount } from 'svelte';
+import ContentScriptUI from './scripts/components/ContentScriptUI.svelte';
 import type {
 	FieldDefinition,
 	FieldDefinitionGetterRequest,
@@ -11,6 +13,7 @@ import type {
 	PicklistFieldDefinition,
 	TextFieldDefinition
 } from './scripts/types';
+import contentScriptUICSS from './styles/content-script-ui.scss?inline';
 
 // The messages to display in the UI
 export const MESSAGES = {
@@ -221,3 +224,21 @@ chrome.runtime.onMessage.addListener(
 		return true;
 	}
 );
+
+async function appendUIToPage() {
+	const shadowContainer = document.createElement('div');
+	shadowContainer.classList.add('sfff-root');
+	shadowContainer.style.display = 'block';
+	shadowContainer.attachShadow({ mode: 'open' });
+	document.body.appendChild(shadowContainer);
+	if (shadowContainer.shadowRoot) {
+		const style = document.createElement('style');
+		style.textContent = contentScriptUICSS;
+		shadowContainer.shadowRoot.appendChild(style);
+		const shadowContainerMain = document.createElement('main');
+		shadowContainer.shadowRoot.appendChild(shadowContainerMain);
+		mount(ContentScriptUI, { target: shadowContainerMain });
+	}
+}
+
+appendUIToPage();
