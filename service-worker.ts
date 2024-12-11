@@ -101,19 +101,21 @@ async function fetchAndPopulateFormValues({
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-	if (message.action === 'getFieldValues') {
-		// According to MDN, "Promise as a return value is not supported in Chrome
-		// until Chrome bug 1185241 is resolved. As an alternative, return true and
-		// use sendResponse." (see
-		// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
-		fetchAndPopulateFormValues({
-			fieldDefinitions: message.fieldDefinitions,
-			sendResponse
-		});
-		return true;
+	switch (message.action) {
+		case 'getFieldValues':
+			// According to MDN, "Promise as a return value is not supported in Chrome
+			// until Chrome bug 1185241 is resolved. As an alternative, return true and
+			// use sendResponse." (see
+			// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
+			fetchAndPopulateFormValues({
+				fieldDefinitions: message.fieldDefinitions,
+				sendResponse
+			});
+			return true;
+		default:
+			// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
+			return false;
 	}
-	// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
-	return false;
 });
 
 chrome.runtime.onInstalled.addListener((object) => {
