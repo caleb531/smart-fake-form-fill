@@ -18,6 +18,7 @@ export type FieldValues = Record<string, string | string[]>;
 
 export type FormFillerRequest = {
 	action: 'fillForm';
+	tabId: number | undefined;
 	formSelector?: string;
 };
 export type FieldDefinitionGetterRequest = {
@@ -26,6 +27,7 @@ export type FieldDefinitionGetterRequest = {
 };
 export type FieldValueGetterRequest = {
 	action: 'getFieldValues';
+	tabId: number | undefined;
 	fieldDefinitions: FieldDefinition[];
 };
 export type FieldPopulatorRequest = {

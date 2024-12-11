@@ -30,9 +30,11 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 
 // Fetch the relevant form values
 async function fetchAndPopulateFormValues({
+	tabId,
 	fieldDefinitions,
 	sendResponse
 }: {
+	tabId: number | undefined;
 	fieldDefinitions: FieldDefinition[];
 	sendResponse: (response?: FieldValueGetterResponse) => void;
 }) {
@@ -47,8 +49,7 @@ async function fetchAndPopulateFormValues({
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
 		console.log('field definitions:', fieldDefinitions);
-		const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-		if (!activeTab?.id) {
+		if (!tabId) {
 			throw new Error('No active tab');
 		}
 		const completionStream = await openai.chat.completions.create({
@@ -83,7 +84,7 @@ async function fetchAndPopulateFormValues({
 				// start of a new key-value pair boundary)
 				chunkParts.length = 0;
 				chunkParts.push('{');
-				chrome.tabs.sendMessage(activeTab.id, {
+				chrome.tabs.sendMessage(tabId, {
 					action: 'populateFieldsIntoForm',
 					fieldValues
 				} as FieldPopulatorRequest);
@@ -108,6 +109,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			// use sendResponse." (see
 			// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
 			fetchAndPopulateFormValues({
+				tabId: message.tabId,
 				fieldDefinitions: message.fieldDefinitions,
 				sendResponse
 			});
@@ -136,6 +138,6 @@ chrome.runtime.onInstalled.addListener((object) => {
 // the content script to fill the form
 chrome.contextMenus.onClicked.addListener((info, tab) => {
 	if (info.menuItemId === 'populateFieldsIntoForm' && tab?.id) {
-		chrome.tabs.sendMessage(tab.id, { action: 'fillForm' });
+		chrome.tabs.sendMessage(tab.id, { action: 'fillForm', tabId: tab.id });
 	}
 });

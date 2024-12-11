@@ -19,6 +19,7 @@
 					processingMessage = changes.processingMessage.newValue;
 					if (processingMessage === null) {
 						justFinishedFillingForm = true;
+						window.SMART_FAKE_FORM_FILL_PROCESSING = false;
 						setTimeout(() => {
 							justFinishedFillingForm = false;
 						}, successDelay);
@@ -29,7 +30,12 @@
 	});
 </script>
 
-<div class="status-banner" class:visible={processingMessage !== null || justFinishedFillingForm}>
+<div
+	class="status-banner"
+	class:visible={window.SMART_FAKE_FORM_FILL_PROCESSING ||
+		processingMessage !== null ||
+		justFinishedFillingForm}
+>
 	<h1>Smart Fake Form Fill</h1>
 	<div class="status-banner-status">
 		{#if justFinishedFillingForm}

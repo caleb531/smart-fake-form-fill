@@ -15,6 +15,12 @@ import type {
 } from './scripts/types';
 import contentScriptUICSS from './styles/content-script-ui.scss?inline';
 
+declare global {
+	interface Window {
+		SMART_FAKE_FORM_FILL_PROCESSING?: boolean;
+	}
+}
+
 // The messages to display in the UI
 export const MESSAGES = {
 	PROCESSING: 'Generating smart fake values with AI…'
@@ -158,8 +164,10 @@ document.addEventListener('contextmenu', (event) => {
 
 // The orchestration logic for the form-filling functionality
 async function fillForm({
+	tabId,
 	formSelector
 }: {
+	tabId: number | undefined;
 	formSelector: string | undefined;
 }): Promise<FormFillerResponse> {
 	lastSelectedForm = formSelector
@@ -174,6 +182,7 @@ async function fillForm({
 	// fake values for the respective fields
 	const fieldValueGetterRequest: FieldValueGetterRequest = {
 		action: 'getFieldValues',
+		tabId,
 		fieldDefinitions
 	};
 	const fieldValueGetterResponse: FieldValueGetterResponse =
@@ -195,15 +204,16 @@ async function handleMessage({
 	try {
 		switch (message.action) {
 			case 'fillForm': {
+				window.SMART_FAKE_FORM_FILL_PROCESSING = true;
 				const { formSelector } = message as FormFillerRequest;
-				sendResponse(await fillForm({ formSelector }));
+				sendResponse(await fillForm({ formSelector, tabId: message.tabId }));
 				break;
 			}
 			case 'populateFieldsIntoForm': {
 				const { fieldValues } = message as FieldPopulatorRequest;
 				if (!lastSelectedForm) {
 					console.log('No form selected; aborting.');
-					return;
+					break;
 				}
 				console.log('Populating fields:', fieldValues);
 				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });

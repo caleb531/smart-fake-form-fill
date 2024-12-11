@@ -23,6 +23,7 @@
 			// selector, throwing an error if the form cannot be found
 			const formFillerRequest: FormFillerRequest = {
 				action: 'fillForm',
+				tabId: activeTab.id,
 				formSelector
 			};
 			const formFillerResponse: FormFillerResponse = await chrome.tabs.sendMessage(
