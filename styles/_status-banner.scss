@@ -2,11 +2,16 @@
 @use 'loading-indicator';
 
 :host {
+	all: initial;
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+* {
+	box-sizing: border-box;
 }
 
 .status-banner {
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
 	gap: 0 20px;
 	flex-wrap: wrap;
@@ -18,6 +23,7 @@
 	padding: 10px 15px;
 	background-color: var(--color-app-background);
 	color: var(--color-app-text);
+	line-height: 1;
 	transform: translateY(-100%);
 	transition: transform 500ms ease-in-out;
 	&.visible {
@@ -25,7 +31,7 @@
 	}
 	h1 {
 		margin: 0;
-		font-size: 1.5rem;
+		font-size: 16px;
 		font-weight: bold;
 	}
 }
@@ -33,6 +39,7 @@
 .status-banner-status {
 	display: flex;
 	align-items: center;
+	font-size: 16px;
 	.loading-indicator-icon {
 		width: 24px;
 		stroke-width: 30;
