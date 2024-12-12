@@ -2,7 +2,6 @@ import { mount } from 'svelte';
 import ContentScriptUI from './scripts/components/ContentScriptUI.svelte';
 import type {
 	FieldDefinition,
-	FieldDefinitionGetterRequest,
 	FieldPopulatorRequest,
 	FieldPopulatorResponse,
 	FieldValueGetterRequest,
@@ -20,11 +19,6 @@ declare global {
 		SMART_FAKE_FORM_FILL_PROCESSING?: boolean;
 	}
 }
-
-// The messages to display in the UI
-export const MESSAGES = {
-	PROCESSING: 'Generating smart fake values with AI…'
-} as const;
 
 let lastSelectedForm: HTMLFormElement | null = null;
 let lastRightClickedElement: Element | null = null;
@@ -176,7 +170,6 @@ async function fillForm({
 	if (!lastSelectedForm) {
 		throw new Error('Cannot find form element; aborting.');
 	}
-	await chrome.storage.local.set({ processingMessage: MESSAGES.PROCESSING });
 	const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
 	// Once we have the field definitions, send them to OpenAI to generate
 	// fake values for the respective fields
@@ -198,7 +191,7 @@ async function handleMessage({
 	message,
 	sendResponse
 }: {
-	message: FormFillerRequest | FieldDefinitionGetterRequest | FieldPopulatorRequest;
+	message: FormFillerRequest | FieldPopulatorRequest;
 	sendResponse: (response: FormFillerResponse | FieldPopulatorResponse) => void;
 }) {
 	try {
@@ -217,26 +210,27 @@ async function handleMessage({
 				}
 				console.log('Populating fields:', fieldValues);
 				populateFieldsIntoForm({ form: lastSelectedForm, fieldValues });
-				sendResponse({ status: 'success' } as FieldPopulatorResponse);
+				sendResponse({ status: { code: 'SUCCESS' } } as FieldPopulatorResponse);
 				break;
 			}
 		}
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {
-			sendResponse({ status: 'error', errorMessage: error.message });
+			sendResponse({ status: { code: 'ERROR', message: error.message } });
 		}
 	}
 }
 
 chrome.runtime.onMessage.addListener(
-	(
-		message: FormFillerRequest | FieldDefinitionGetterRequest | FieldPopulatorRequest,
-		sender,
-		sendResponse
-	) => {
-		handleMessage({ message, sendResponse });
-		return true;
+	(message: FormFillerRequest | FieldPopulatorRequest, sender, sendResponse) => {
+		// Only return true (meaning that the browser will expect us to call
+		// sendResponse at some point) if and only if the action is one of the
+		// handled actions for this event listener
+		if (['fillForm', 'populateFieldsIntoForm'].includes(message.action)) {
+			handleMessage({ message, sendResponse });
+			return true;
+		}
 	}
 );
 

@@ -5,7 +5,9 @@ import type {
 	FieldDefinition,
 	FieldPopulatorRequest,
 	FieldValueGetterResponse,
-	FieldValues
+	FieldValues,
+	Status,
+	StatusUpdateRequest
 } from './scripts/types';
 
 function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues | null {
@@ -26,6 +28,18 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 		// JSON, and we don't want to clutter the console
 		return null;
 	}
+}
+
+// Send the latest status to the tab which started the form fill job, and also
+// persist the status to the extension's local storage so that it can be
+// accessed from the popup; allow for an optional error message to be supplied
+async function updateStatus({ tabId, status }: { tabId: number; status: Status }) {
+	const message: StatusUpdateRequest = {
+		action: 'updateStatus',
+		status
+	};
+	await chrome.tabs.sendMessage(tabId, message);
+	await chrome.storage.local.set({ status });
 }
 
 // Fetch the relevant form values
@@ -52,6 +66,9 @@ async function fetchAndPopulateFormValues({
 		if (!tabId) {
 			throw new Error('No active tab');
 		}
+		console.log('before update initial status');
+		await updateStatus({ tabId, status: { code: 'PROCESSING' } });
+		console.log('after update initial status');
 		const completionStream = await openai.chat.completions.create({
 			model,
 			stream: true,
@@ -74,8 +91,10 @@ async function fetchAndPopulateFormValues({
 				}
 			]
 		});
+		console.log('after initial api call');
 		const chunkParts: string[] = [];
 		for await (const chunk of completionStream) {
+			console.log('process chunk', chunk);
 			chunkParts.push(chunk.choices[0]?.delta.content || '');
 			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
 			if (fieldValues && Object.keys(fieldValues).length > 0) {
@@ -90,14 +109,16 @@ async function fetchAndPopulateFormValues({
 				} as FieldPopulatorRequest);
 			}
 		}
-		sendResponse({ status: 'success' });
+		sendResponse({ status: { code: 'SUCCESS' } });
 	} catch (error) {
 		console.error(error);
 		if (error instanceof Error) {
-			sendResponse({ status: 'error', errorMessage: error.message });
+			sendResponse({ status: { code: 'ERROR', message: error.message } });
 		}
 	} finally {
-		chrome.storage.local.set({ processingMessage: null });
+		if (tabId) {
+			await updateStatus({ tabId, status: { code: 'SUCCESS' } });
+		}
 	}
 }
 
@@ -105,8 +126,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	switch (message.action) {
 		case 'getFieldValues':
 			// According to MDN, "Promise as a return value is not supported in Chrome
-			// until Chrome bug 1185241 is resolved. As an alternative, return true and
-			// use sendResponse." (see
+			// until Chrome bug 1185241 is resolved. As an alternative, return true
+			// and use sendResponse." (see
 			// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
 			fetchAndPopulateFormValues({
 				tabId: message.tabId,

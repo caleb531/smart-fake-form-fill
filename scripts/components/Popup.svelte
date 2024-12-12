@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { FormFillerRequest, FormFillerResponse } from '../types';
-	import LoadingIcon from './LoadingIndicator.svelte';
+	import { MESSAGES } from '../config';
+	import type { FormFillerRequest, FormFillerResponse, Status } from '../types';
+	import LoadingIndicator from './LoadingIndicator.svelte';
 	import OptionsIcon from './OptionsIcon.svelte';
 
 	let formSelector = $state('#app-embed::shadow-root form');
 	let formError: string | null = $state(null);
-	let processingMessage: string | null = $state(null);
+	let status: Status | null = $state(null);
 	let justFinishedFillingForm = $state(false);
 	// The number of milliseconds to wait to indicate to the user that the API key
 	// was successfully changed
@@ -41,22 +42,22 @@
 			console.error(error);
 			if (error instanceof Error) {
 				formError = error.message || 'An unknown error occurred';
-				processingMessage = null;
+				status = null;
 			}
 		}
 	}
 
 	$effect(() => {
 		(async () => {
-			const local = await chrome.storage.local.get('processingMessage');
-			if (local.processingMessage) {
-				processingMessage = local.processingMessage;
+			const local = await chrome.storage.local.get('status');
+			if (local.status) {
+				status = local.status;
 			}
 			// Hide processing state when the process is done, even if popup has been
 			// closed/reopened since job was started
 			chrome.storage.onChanged.addListener((changes) => {
-				if (changes.processingMessage) {
-					processingMessage = changes.processingMessage.newValue;
+				if (changes.status) {
+					status = changes.status.newValue;
 				}
 			});
 		})();
@@ -67,9 +68,9 @@
 	<title>Smart Fake Form Fill</title>
 </svelte:head>
 
-<a class="options-link" href="options.html" target="_blank" rel="noreferrer" title="Options"
-	><OptionsIcon /></a
->
+<a class="options-link" href="options.html" target="_blank" rel="noreferrer" title="Options">
+	<OptionsIcon />
+</a>
 
 <h1>Smart Fake Form Fill</h1>
 
@@ -82,23 +83,15 @@
 		{/if}
 	</div>
 	<div class="form-footer">
-		{#if processingMessage !== null}
-			<LoadingIcon label={processingMessage} />
+		{#if status?.code === 'PROCESSING'}
+			<LoadingIndicator label={MESSAGES.PROCESSING} />
+		{:else if justFinishedFillingForm}
+			<span class="form-done-message">{MESSAGES.SUCCESS}</span>
 		{:else}
-			<button
-				type="submit"
-				data-processing={processingMessage !== null}
-				disabled={justFinishedFillingForm || processingMessage !== null}
-			>
-				{#if justFinishedFillingForm}
-					Done!
-				{:else}
-					Fill Form
-				{/if}
-			</button>
+			<button type="submit">Fill Form</button>
 		{/if}
 	</div>
-	{#if processingMessage === null && !justFinishedFillingForm}
+	{#if status === null && !justFinishedFillingForm}
 		<p class="hint">You can also right-click on a form to fill.</p>
 	{/if}
 </form>

@@ -15,15 +15,21 @@ export type TextFieldDefinition = {
 export type FieldDefinition = PicklistFieldDefinition | TextFieldDefinition;
 
 export type FieldValues = Record<string, string | string[]>;
+export type StatusCode = 'PROCESSING' | 'SUCCESS' | 'ERROR';
+export type Status = {
+	code: StatusCode;
+	message?: string;
+};
 
 export type FormFillerRequest = {
 	action: 'fillForm';
 	tabId: number | undefined;
 	formSelector?: string;
 };
-export type FieldDefinitionGetterRequest = {
-	action: 'getFieldDefinitions';
-	formSelector: string;
+export type StatusUpdateRequest = {
+	action: 'updateStatus';
+	status: Status;
+	errorMessage?: string;
 };
 export type FieldValueGetterRequest = {
 	action: 'getFieldValues';
@@ -35,20 +41,18 @@ export type FieldPopulatorRequest = {
 	fieldValues: FieldValues;
 };
 
-export type MessageResponseStatus = 'success' | 'partial' | 'error';
-
 export type FieldDefinitionGetterResponse = {
-	status: MessageResponseStatus;
+	status: Status;
 	fieldDefinitions: FieldDefinition[];
 	errorMessage?: string;
 };
 export type FieldValueGetterResponse = {
-	status: MessageResponseStatus;
+	status: Status;
 	fieldValues?: FieldValues;
 	errorMessage?: string;
 };
 export type FormFillerResponse = FieldValueGetterResponse;
 export type FieldPopulatorResponse = {
-	status: MessageResponseStatus;
+	status: Status;
 	errorMessage?: string;
 };

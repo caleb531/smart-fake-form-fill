@@ -1,48 +1,27 @@
 <script lang="ts">
+	import { MESSAGES } from '../config';
+	import type { Status, StatusUpdateRequest } from '../types';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
-	let processingMessage: string | null = $state(null);
-	let justFinishedFillingForm = $state(false);
-	// The number of milliseconds to wait to indicate to the user that the API key
-	// was successfully changed
-	const successDelay = 2000;
+	let status: Status | null = $state(null);
 
 	$effect(() => {
-		(async () => {
-			const local = await chrome.storage.local.get('processingMessage');
-			if (local.processingMessage) {
-				processingMessage = local.processingMessage;
+		chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
+			if (message.action === 'updateStatus') {
+				status = message.status;
 			}
-			// Hide processing state when the process is done
-			chrome.storage.onChanged.addListener((changes) => {
-				if (changes.processingMessage) {
-					processingMessage = changes.processingMessage.newValue;
-					if (processingMessage === null) {
-						justFinishedFillingForm = true;
-						window.SMART_FAKE_FORM_FILL_PROCESSING = false;
-						setTimeout(() => {
-							justFinishedFillingForm = false;
-						}, successDelay);
-					}
-				}
-			});
-		})();
+		});
 	});
 </script>
 
-<div
-	class="status-banner"
-	class:visible={window.SMART_FAKE_FORM_FILL_PROCESSING ||
-		processingMessage !== null ||
-		justFinishedFillingForm}
->
+<div class="status-banner" class:visible={status !== null}>
 	<h1>Smart Fake Form Fill</h1>
 	<div class="status-banner-status">
-		{#if justFinishedFillingForm}
-			Done!
-		{:else if processingMessage !== null}
-			<LoadingIndicator />
-			{processingMessage}
+		{#if status !== null}
+			{#if status?.code === 'PROCESSING'}
+				<LoadingIndicator />
+			{/if}
+			{MESSAGES[status?.code]}
 		{/if}
 	</div>
 </div>
