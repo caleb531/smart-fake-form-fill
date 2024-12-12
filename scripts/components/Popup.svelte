@@ -59,6 +59,9 @@
 				if (changes.status) {
 					status = changes.status.newValue;
 				}
+				if (status?.code === 'ERROR' && status.message) {
+					formError = status.message;
+				}
 			});
 		})();
 	});

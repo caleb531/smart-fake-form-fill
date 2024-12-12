@@ -1,6 +1,10 @@
 import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
-import { DEFAULT_AI_MODEL } from './scripts/config';
+import {
+	DEFAULT_AI_MODEL,
+	OPENAI_REQUEST_MAX_RETRIES,
+	OPENAI_REQUEST_TIMEOUT
+} from './scripts/config';
 import type {
 	FieldDefinition,
 	FieldPopulatorRequest,
@@ -66,32 +70,39 @@ async function fetchAndPopulateFormValues({
 		if (!tabId) {
 			throw new Error('No active tab');
 		}
-		console.log('before update initial status');
 		await updateStatus({ tabId, status: { code: 'PROCESSING' } });
-		console.log('after update initial status');
-		const completionStream = await openai.chat.completions.create({
-			model,
-			stream: true,
-			messages: [
-				{
-					role: 'system',
-					content: systemPrompt
-				},
-				...(custom_instructions
-					? [
-							{
-								role: 'system',
-								content: custom_instructions?.toString() || ''
-							} as const
-						]
-					: []),
-				{
-					role: 'user',
-					content: `\`\`\`\n${JSON.stringify(fieldDefinitions)}\n\`\`\``
-				}
-			]
-		});
-		console.log('after initial api call');
+		const completionStream = await openai.chat.completions.create(
+			{
+				model,
+				stream: true,
+
+				messages: [
+					{
+						role: 'system',
+						content: systemPrompt
+					},
+					...(custom_instructions
+						? [
+								{
+									role: 'system',
+									content: custom_instructions?.toString() || ''
+								} as const
+							]
+						: []),
+					{
+						role: 'user',
+						content: `\`\`\`\n${JSON.stringify(fieldDefinitions)}\n\`\`\``
+					}
+				]
+			},
+			{
+				// Time out and throw an error after a certain amount of time has passed
+				// without a response from OpenAI (multiplied by a maximum number of
+				// attempts)
+				maxRetries: OPENAI_REQUEST_MAX_RETRIES,
+				timeout: OPENAI_REQUEST_TIMEOUT
+			}
+		);
 		const chunkParts: string[] = [];
 		for await (const chunk of completionStream) {
 			console.log('process chunk', chunk);
@@ -110,14 +121,12 @@ async function fetchAndPopulateFormValues({
 			}
 		}
 		sendResponse({ status: { code: 'SUCCESS' } });
+		await updateStatus({ tabId, status: { code: 'SUCCESS' } });
 	} catch (error) {
 		console.error(error);
-		if (error instanceof Error) {
+		if (error instanceof Error && tabId) {
+			await updateStatus({ tabId, status: { code: 'ERROR', message: error.message } });
 			sendResponse({ status: { code: 'ERROR', message: error.message } });
-		}
-	} finally {
-		if (tabId) {
-			await updateStatus({ tabId, status: { code: 'SUCCESS' } });
 		}
 	}
 }
