@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { MESSAGES } from '../config';
-	import type { FormFillerRequest, FormFillerResponse, Status } from '../types';
+	import type {
+		FormFillerRequest,
+		FormFillerResponse,
+		Status,
+		StatusUpdateRequest
+	} from '../types';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 	import OptionsIcon from './OptionsIcon.svelte';
 
 	let formSelector = $state('#app-embed::shadow-root form');
-	let formError: string | null = $state(null);
 	let status: Status | null = $state(null);
 	let justFinishedFillingForm = $state(false);
 	// The number of milliseconds to wait to indicate to the user that the API key
@@ -15,7 +19,7 @@
 	async function fillForm(event: SubmitEvent) {
 		event.preventDefault();
 		try {
-			formError = null;
+			status = null;
 			const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 			if (!activeTab?.id) {
 				throw new Error('No active tab');
@@ -41,26 +45,25 @@
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
-				formError = error.message || 'An unknown error occurred';
-				status = null;
+				status = { code: 'ERROR', message: error.message || MESSAGES.ERROR };
 			}
 		}
 	}
 
+	async function fetchStatus() {
+		const { status } = await chrome.runtime.sendMessage({ action: 'getStatus' });
+		return status;
+	}
+
 	$effect(() => {
 		(async () => {
-			const local = await chrome.storage.local.get('status');
-			if (local.status) {
-				status = local.status;
-			}
-			// Hide processing state when the process is done, even if popup has been
-			// closed/reopened since job was started
-			chrome.storage.onChanged.addListener((changes) => {
-				if (changes.status) {
-					status = changes.status.newValue;
-				}
-				if (status?.code === 'ERROR' && status.message) {
-					formError = status.message;
+			status = await fetchStatus();
+			chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
+				console.log('receive message', message);
+				switch (message.action) {
+					case 'updateStatus':
+						status = message.status;
+						break;
 				}
 			});
 		})();
@@ -81,15 +84,15 @@
 	<div class="form-field">
 		<label for="formSelector">Form Selector</label>
 		<input id="formSelector" name="formSelector" type="text" bind:value={formSelector} />
-		{#if formError}
-			<p class="form-error">{formError}</p>
+		{#if status?.code === 'ERROR'}
+			<p class="form-error">{status.message}</p>
 		{/if}
 	</div>
 	<div class="form-footer">
 		{#if status?.code === 'PROCESSING'}
 			<LoadingIndicator label={MESSAGES.PROCESSING} />
 		{:else if justFinishedFillingForm}
-			<span class="form-done-message">{MESSAGES.SUCCESS}</span>
+			<span class="form-success-message">{MESSAGES.SUCCESS}</span>
 		{:else}
 			<button type="submit">Fill Form</button>
 		{/if}

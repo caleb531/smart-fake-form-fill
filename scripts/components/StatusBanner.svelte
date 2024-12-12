@@ -7,13 +7,12 @@
 
 	$effect(() => {
 		chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
-			if (message.action === 'updateStatus') {
-				status = message.status;
+			switch (message.action) {
+				case 'updateStatus':
+					status = message.status;
+					break;
 			}
 		});
-	});
-	$effect(() => {
-		console.log('the status', status);
 	});
 </script>
 

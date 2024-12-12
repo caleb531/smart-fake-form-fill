@@ -40,6 +40,9 @@ export type FieldPopulatorRequest = {
 	action: 'populateFieldsIntoForm';
 	fieldValues: FieldValues;
 };
+export type GetStatusRequest = {
+	action: 'getStatus';
+};
 
 export type FieldDefinitionGetterResponse = {
 	status: Status;

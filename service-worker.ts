@@ -14,6 +14,10 @@ import type {
 	StatusUpdateRequest
 } from './scripts/types';
 
+// Store the current status of the form fill job so we can retrieve the job
+// status at any time
+let currentStatus: Status | null = null;
+
 function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues | null {
 	try {
 		const fieldValues = JSON.parse(
@@ -38,12 +42,30 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 // persist the status to the extension's local storage so that it can be
 // accessed from the popup; allow for an optional error message to be supplied
 async function updateStatus({ tabId, status }: { tabId: number; status: Status }) {
+	currentStatus = status;
 	const message: StatusUpdateRequest = {
 		action: 'updateStatus',
 		status
 	};
 	await chrome.tabs.sendMessage(tabId, message);
-	await chrome.storage.local.set({ status });
+	try {
+		await chrome.runtime.sendMessage(message);
+		/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+	} catch (error) {
+		// If the popup isn't open when we attempt to send the message, then an
+		// connection error ("Could not establish connection. Receiving end does not
+		// exist.") will be thrown; we want to ignore this error, but still allow it
+		// and other errors to be viewable under a higher "verbose" log level
+		console.debug(error);
+	}
+}
+
+function getStatus({
+	sendResponse
+}: {
+	sendResponse: (response: { status: Status | null }) => void;
+}) {
+	sendResponse({ status: currentStatus });
 }
 
 // Fetch the relevant form values
@@ -142,6 +164,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				fieldDefinitions: message.fieldDefinitions,
 				sendResponse
 			});
+			return true;
+		case 'getStatus':
+			getStatus({ sendResponse });
 			return true;
 		default:
 			// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>
