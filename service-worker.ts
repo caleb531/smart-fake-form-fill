@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
 import {
 	DEFAULT_AI_MODEL,
+	EXTENSION_DISPLAY_NAME,
 	OPENAI_REQUEST_MAX_RETRIES,
 	OPENAI_REQUEST_TIMEOUT
 } from './scripts/config';
@@ -13,6 +14,9 @@ import type {
 	Status,
 	StatusUpdateRequest
 } from './scripts/types';
+
+// The ID of the context menu item used to trigger the extension
+const CONTEXT_MENU_ITEM_ID = 'populateFieldsIntoForm';
 
 // Store the current status of the form fill job so we can retrieve the job
 // status at any time
@@ -57,6 +61,13 @@ async function updateStatus({ tabId, status }: { tabId: number; status: Status }
 		// and other errors to be viewable under a higher "verbose" log level
 		console.debug(error);
 	}
+	const isContextMenuEnabled = status?.code !== 'PROCESSING';
+	chrome.contextMenus.update(CONTEXT_MENU_ITEM_ID, {
+		title: isContextMenuEnabled
+			? EXTENSION_DISPLAY_NAME
+			: `${EXTENSION_DISPLAY_NAME} (Processing...)`,
+		enabled: isContextMenuEnabled
+	});
 }
 
 function getStatus({
@@ -179,8 +190,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener((object) => {
 	// Add context menu item for selecting/populating form via right-click
 	chrome.contextMenus.create({
-		id: 'populateFieldsIntoForm',
-		title: 'Smart Fake Form Fill',
+		id: CONTEXT_MENU_ITEM_ID,
+		title: EXTENSION_DISPLAY_NAME,
 		contexts: ['page', 'editable', 'selection']
 	});
 	// Open Options page (to enter API key) when extension is first installed
@@ -193,7 +204,7 @@ chrome.runtime.onInstalled.addListener((object) => {
 // When the user chooses the extension's context menu item, send a message to
 // the content script to fill the form
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-	if (info.menuItemId === 'populateFieldsIntoForm' && tab?.id) {
+	if (info.menuItemId === CONTEXT_MENU_ITEM_ID && tab?.id) {
 		chrome.tabs.sendMessage(tab.id, { action: 'fillForm', tabId: tab.id });
 	}
 });
