@@ -1,0 +1,20 @@
+:root,
+:host {
+	// Base font sizes
+	--font-size-xxxl: calc(1rem * 24 / 16);
+	--font-size-xxl: calc(1rem * 22 / 16);
+	--font-size-xl: calc(1rem * 20 / 16);
+	--font-size-l: calc(1rem * 18 / 16);
+	--font-size-m: 1rem;
+	--font-size-s: calc(1rem * 14 / 16);
+	--font-size-xs: calc(1rem * 12 / 16);
+}
+
+:root,
+:host {
+	// Semantic font sizes
+	--font-size-h1: var(--font-size-xxxl);
+	--font-size-input: var(--font-size-m);
+	--font-size-button: var(--font-size-input);
+	--font-size-label: var(--font-size-s);
+}
