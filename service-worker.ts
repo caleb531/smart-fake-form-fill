@@ -50,7 +50,6 @@ async function updateStatus({ tabId, status }: { tabId: number; status: Status }
 	await chrome.tabs.sendMessage(tabId, message);
 	try {
 		await chrome.runtime.sendMessage(message);
-		/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 	} catch (error) {
 		// If the popup isn't open when we attempt to send the message, then an
 		// connection error ("Could not establish connection. Receiving end does not
