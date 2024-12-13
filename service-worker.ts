@@ -57,15 +57,6 @@ async function updateStatus({ tabId, status }: { tabId: number; status: Status }
 		status
 	};
 	await chrome.tabs.sendMessage(tabId, message);
-	try {
-		await chrome.runtime.sendMessage(message);
-	} catch (error) {
-		// If the popup isn't open when we attempt to send the message, then an
-		// connection error ("Could not establish connection. Receiving end does not
-		// exist.") will be thrown; we want to ignore this error, but still allow it
-		// and other errors to be viewable under a higher "verbose" log level
-		console.debug(error);
-	}
 	const isContextMenuEnabled = status?.code !== 'PROCESSING';
 	chrome.contextMenus.update(CONTEXT_MENU_ITEM_ID, {
 		title: isContextMenuEnabled
