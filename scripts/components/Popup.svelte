@@ -38,10 +38,6 @@
 			if (formFillerResponse.errorMessage) {
 				throw new Error(formFillerResponse.errorMessage);
 			}
-			justFinishedFillingForm = true;
-			setTimeout(() => {
-				justFinishedFillingForm = false;
-			}, successDelay);
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
@@ -50,23 +46,23 @@
 		}
 	}
 
-	async function fetchStatus() {
-		const { status } = await chrome.runtime.sendMessage({ action: 'getStatus' });
-		return status;
-	}
-
 	$effect(() => {
 		(async () => {
-			status = await fetchStatus();
+			status = (await chrome.runtime.sendMessage({ action: 'getStatus' }))?.status ?? null;
 			chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
-				console.log('receive message', message);
-				switch (message.action) {
-					case 'updateStatus':
-						status = message.status;
-						break;
+				if (message.action === 'updateStatus') {
+					status = message.status;
 				}
 			});
 		})();
+	});
+	$effect(() => {
+		if (status?.code === 'SUCCESS') {
+			justFinishedFillingForm = true;
+			setTimeout(() => {
+				justFinishedFillingForm = false;
+			}, successDelay);
+		}
 	});
 </script>
 

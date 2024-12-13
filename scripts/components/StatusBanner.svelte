@@ -19,11 +19,14 @@
 	}
 
 	$effect(() => {
-		chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
-			if (message.action === 'updateStatus') {
-				status = message.status;
-			}
-		});
+		(async () => {
+			status = (await chrome.runtime.sendMessage({ action: 'getStatus' }))?.status ?? null;
+			chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
+				if (message.action === 'updateStatus') {
+					status = message.status;
+				}
+			});
+		})();
 	});
 	$effect(() => {
 		if (status?.code === 'SUCCESS') {
