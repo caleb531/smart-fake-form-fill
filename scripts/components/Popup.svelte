@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MESSAGES } from '../config';
+	import { UI_MESSAGES } from '../config';
 	import type {
 		FormFillerRequest,
 		FormFillerResponse,
@@ -45,7 +45,7 @@
 		} catch (error) {
 			console.error(error);
 			if (error instanceof Error) {
-				status = { code: 'ERROR', message: error.message || MESSAGES.ERROR };
+				status = { code: 'ERROR', message: error.message || UI_MESSAGES.ERROR };
 			}
 		}
 	}
@@ -90,9 +90,9 @@
 	</div>
 	<div class="form-footer">
 		{#if status?.code === 'PROCESSING'}
-			<LoadingIndicator label={MESSAGES.PROCESSING} />
+			<LoadingIndicator label={UI_MESSAGES.PROCESSING} />
 		{:else if justFinishedFillingForm}
-			<span class="form-success-message">{MESSAGES.SUCCESS}</span>
+			<span class="form-success-message">{UI_MESSAGES.SUCCESS}</span>
 		{/if}
 		<button type="submit" data-hidden={status?.code === 'PROCESSING' || justFinishedFillingForm}>
 			Fill Form

@@ -10,7 +10,7 @@ export const OPENAI_REQUEST_TIMEOUT = 5000;
 
 // The possible messages to show within the UI based on the state of the
 // extension
-export const MESSAGES = {
+export const UI_MESSAGES = {
 	PROCESSING: 'Generating smart fake values with AI…',
 	SUCCESS: 'Success!',
 	ERROR: 'An error occurred.'

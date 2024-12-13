@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MESSAGES } from '../config';
+	import { UI_MESSAGES } from '../config';
 	import type { Status, StatusUpdateRequest } from '../types';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
@@ -31,11 +31,11 @@
 	<div class="status-banner-status">
 		{#if status?.code === 'PROCESSING'}
 			<LoadingIndicator />
-			{MESSAGES.PROCESSING}
+			{UI_MESSAGES.PROCESSING}
 		{:else if status?.code === 'ERROR'}
 			{status.message}
 		{:else if status !== null}
-			{MESSAGES[status?.code]}
+			{UI_MESSAGES[status?.code]}
 		{/if}
 	</div>
 </div>
