@@ -57,6 +57,9 @@ async function updateStatus({ tabId, status }: { tabId: number; status: Status }
 		status
 	};
 	await chrome.tabs.sendMessage(tabId, message);
+	// Update the context menu item to reflect the current status (specifically,
+	// the context menu item should be disabled while the form fill job is in
+	// progress)
 	const isContextMenuEnabled = status?.code !== 'PROCESSING';
 	chrome.contextMenus.update(CONTEXT_MENU_ITEM_ID, {
 		title: isContextMenuEnabled
