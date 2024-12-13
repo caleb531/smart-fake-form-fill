@@ -93,9 +93,10 @@
 			<LoadingIndicator label={MESSAGES.PROCESSING} />
 		{:else if justFinishedFillingForm}
 			<span class="form-success-message">{MESSAGES.SUCCESS}</span>
-		{:else}
-			<button type="submit">Fill Form</button>
 		{/if}
+		<button type="submit" data-hidden={status?.code === 'PROCESSING' || justFinishedFillingForm}>
+			Fill Form
+		</button>
 	</div>
 	{#if status === null && !justFinishedFillingForm}
 		<p class="hint">You can also right-click on a form to fill.</p>

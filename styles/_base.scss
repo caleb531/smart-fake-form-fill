@@ -86,7 +86,7 @@ button {
 	&[disabled] {
 		opacity: 0.75;
 	}
-	&[data-processing='true'] {
+	&[data-hidden='true'] {
 		visibility: hidden;
 		width: 0;
 		padding-left: 0;
