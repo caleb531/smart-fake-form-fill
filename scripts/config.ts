@@ -13,5 +13,6 @@ export const OPENAI_REQUEST_TIMEOUT = 5000;
 export const UI_MESSAGES = {
 	PROCESSING: 'Generating smart fake values with AI…',
 	SUCCESS: 'Success!',
-	ERROR: 'An error occurred.'
+	ERROR: 'An error occurred.',
+	CANCELED: 'Canceled.'
 } as const;

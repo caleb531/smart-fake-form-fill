@@ -11,7 +11,6 @@
 
 .status-banner {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
 	gap: 0 20px;
 	flex-wrap: wrap;
@@ -37,11 +36,23 @@
 }
 
 .status-banner-status {
+	flex-grow: 1;
 	display: flex;
+	justify-content: flex-end;
 	align-items: center;
 	font-size: 16px;
 	.loading-indicator-icon {
 		width: 16px;
 		stroke-width: 30;
+	}
+}
+
+.status-banner-close-button {
+	border-width: 0;
+	background: none;
+	font-size: 16px;
+	color: var(--color-app-text);
+	&[disabled] {
+		opacity: 0.5;
 	}
 }

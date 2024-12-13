@@ -21,6 +21,11 @@ const CONTEXT_MENU_ITEM_ID = 'populateFieldsIntoForm';
 // Store the current status of the form fill job so we can retrieve the job
 // status at any time
 let currentStatus: Status | null = null;
+// Store the AbortController instance so we can cancel the form fill job upon
+// request
+let abortController: AbortController | null = null;
+// Store a flag to indicate when the current job has been aborted
+let aborted = false;
 
 function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues | null {
 	try {
@@ -107,6 +112,9 @@ async function fetchAndPopulateFormValues({
 			throw new Error('No active tab');
 		}
 		await updateStatus({ tabId, status: { code: 'PROCESSING' } });
+
+		abortController = new AbortController();
+
 		const completionStream = await openai.chat.completions.create(
 			{
 				model,
@@ -136,11 +144,13 @@ async function fetchAndPopulateFormValues({
 				// without a response from OpenAI (multiplied by a maximum number of
 				// attempts)
 				maxRetries: OPENAI_REQUEST_MAX_RETRIES,
-				timeout: OPENAI_REQUEST_TIMEOUT
+				timeout: OPENAI_REQUEST_TIMEOUT,
+				signal: abortController.signal
 			}
 		);
 		const chunkParts: string[] = [];
 		for await (const chunk of completionStream) {
+			console.log('process chunk');
 			chunkParts.push(chunk.choices[0]?.delta.content || '');
 			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
 			if (fieldValues && Object.keys(fieldValues).length > 0) {
@@ -155,14 +165,22 @@ async function fetchAndPopulateFormValues({
 				} as FieldPopulatorRequest);
 			}
 		}
+		console.log('aborted', aborted);
+		if (aborted) {
+			throw new Error('Form fill canceled by user');
+		}
 		sendResponse({ status: { code: 'SUCCESS' } });
 		await updateStatus({ tabId, status: { code: 'SUCCESS' } });
+		console.log('sent status success!');
 	} catch (error) {
 		console.error(error);
-		if (error instanceof Error && tabId) {
-			await updateStatus({ tabId, status: { code: 'ERROR', message: error.message } });
-			sendResponse({ status: { code: 'ERROR', message: error.message } });
+		if (tabId && error instanceof Error) {
+			const code = aborted || error.name === 'AbortError' ? 'CANCELED' : 'ERROR';
+			await updateStatus({ tabId, status: { code, message: error.message } });
+			sendResponse({ status: { code, message: error.message } });
 		}
+	} finally {
+		abortController = null;
 	}
 }
 
@@ -181,6 +199,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			return true;
 		case 'getStatus':
 			getStatus({ sendResponse });
+			return true;
+		case 'cancelRequest':
+			aborted = true;
+			abortController?.abort();
+			sendResponse({ status: { code: 'CANCELED' } });
 			return true;
 		default:
 			// See <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#addlistener_syntax>

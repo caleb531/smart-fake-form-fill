@@ -15,7 +15,7 @@ export type TextFieldDefinition = {
 export type FieldDefinition = PicklistFieldDefinition | TextFieldDefinition;
 
 export type FieldValues = Record<string, string | string[]>;
-export type StatusCode = 'PROCESSING' | 'SUCCESS' | 'ERROR';
+export type StatusCode = 'PROCESSING' | 'SUCCESS' | 'ERROR' | 'CANCELED';
 export type Status = {
 	code: StatusCode;
 	message?: string;
