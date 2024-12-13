@@ -1,9 +1,17 @@
 @use 'base';
 
+body {
+	min-width: 400px;
+}
+
 main {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+}
+
+form {
+	width: 100%;
 }
 
 p {
@@ -14,7 +22,7 @@ p {
 select,
 input[type='text'],
 input[type='password'] {
-	width: 400px;
+	width: 100%;
 }
 
 .loading-indicator-icon {
