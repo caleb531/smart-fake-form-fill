@@ -69,6 +69,7 @@
 				id="openai_api_key"
 				required
 				bind:value={savedOptions.openai_api_key}
+				onfocus={(event) => event.currentTarget.select()}
 			/>
 		</p>
 		<p>
