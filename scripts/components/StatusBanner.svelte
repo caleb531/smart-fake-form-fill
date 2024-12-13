@@ -18,9 +18,15 @@
 		}, successDelay);
 	}
 
+	// Retrieve the initial status of the form fill job
+	async function getStatus() {
+		const { status } = await chrome.runtime.sendMessage({ action: 'getStatus' });
+		return status ?? null;
+	}
+
 	$effect(() => {
 		(async () => {
-			status = (await chrome.runtime.sendMessage({ action: 'getStatus' }))?.status ?? null;
+			status = await getStatus();
 			chrome.runtime.onMessage.addListener((message: StatusUpdateRequest) => {
 				if (message.action === 'updateStatus') {
 					status = message.status;
