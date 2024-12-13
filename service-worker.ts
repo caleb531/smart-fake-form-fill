@@ -88,6 +88,9 @@ async function fetchAndPopulateFormValues({
 		const openai = new OpenAI({ apiKey: openai_api_key });
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
+		if (custom_instructions) {
+			console.log('custom instructions:', custom_instructions);
+		}
 		console.log('field definitions:', fieldDefinitions);
 		if (!tabId) {
 			throw new Error('No active tab');
