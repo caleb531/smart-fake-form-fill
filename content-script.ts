@@ -14,11 +14,6 @@ import type {
 } from './scripts/types';
 import contentScriptUICSS from './styles/content-script-ui.scss?inline';
 
-declare global {
-	interface Window {
-		SMART_FAKE_FORM_FILL_PROCESSING?: boolean;
-	}
-}
 
 let lastSelectedForm: HTMLFormElement | null = null;
 let lastRightClickedElement: Element | null = null;
@@ -197,7 +192,6 @@ async function handleMessage({
 	try {
 		switch (message.action) {
 			case 'fillForm': {
-				window.SMART_FAKE_FORM_FILL_PROCESSING = true;
 				const { formSelector } = message as FormFillerRequest;
 				sendResponse(await fillForm({ formSelector, tabId: message.tabId }));
 				break;
