@@ -51,6 +51,7 @@
 	</div>
 	<button
 		class="status-banner-close-button"
+		title="Cancel Form Fill"
 		onclick={cancelRequest}
 		disabled={status?.code !== 'PROCESSING'}><CancelIcon /></button
 	>
