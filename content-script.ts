@@ -14,6 +14,8 @@ import type {
 } from './scripts/types';
 import contentScriptUICSS from './styles/content-script-ui.scss?inline';
 
+// The ID of the element that contains the extension UI
+const EXTENSION_ROOT_CONTAINER_ID = 'sfff-root';
 
 let lastSelectedForm: HTMLFormElement | null = null;
 let lastRightClickedElement: Element | null = null;
@@ -193,6 +195,7 @@ async function handleMessage({
 		switch (message.action) {
 			case 'fillForm': {
 				const { formSelector } = message as FormFillerRequest;
+				appendUIToPage();
 				sendResponse(await fillForm({ formSelector, tabId: message.tabId }));
 				break;
 			}
@@ -230,9 +233,13 @@ chrome.runtime.onMessage.addListener(
 
 // Append the extension UI to the current page
 async function appendUIToPage() {
+	// Do not append the extension UI if it already exists on the page
+	if (document.getElementById(EXTENSION_ROOT_CONTAINER_ID)) {
+		return;
+	}
 	// Create a shadow DOM container to hold the extension UI
 	const shadowContainer = document.createElement('div');
-	shadowContainer.classList.add('sfff-root');
+	shadowContainer.id = EXTENSION_ROOT_CONTAINER_ID;
 	shadowContainer.style.display = 'block';
 	shadowContainer.attachShadow({ mode: 'open' });
 	document.body.appendChild(shadowContainer);
@@ -250,4 +257,3 @@ async function appendUIToPage() {
 		mount(ContentScriptUI, { target: shadowContainerMain });
 	}
 }
-appendUIToPage();
