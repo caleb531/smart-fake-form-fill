@@ -74,7 +74,7 @@
 		</p>
 		<p>
 			<label for="openai_model">AI Model</label>
-			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model}>
+			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
 				<option value="gpt-4o-mini">gpt-4o-mini</option>
 				<option value="gpt-4o">gpt-4o</option>
 			</select>
