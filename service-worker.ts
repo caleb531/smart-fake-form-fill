@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
 import {
-	DEFAULT_AI_MODEL,
+	DEFAULT_OPENAI_MODEL,
 	EXTENSION_DISPLAY_NAME,
 	OPENAI_REQUEST_MAX_RETRIES,
 	OPENAI_REQUEST_TIMEOUT
@@ -94,7 +94,8 @@ async function fetchAndPopulateFormValues({
 		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
-		const model = (await chrome.storage.sync.get('openai_model'))?.openai_model || DEFAULT_AI_MODEL;
+		const model =
+			(await chrome.storage.sync.get('openai_model'))?.openai_model || DEFAULT_OPENAI_MODEL;
 		const openai = new OpenAI({ apiKey: openai_api_key });
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);

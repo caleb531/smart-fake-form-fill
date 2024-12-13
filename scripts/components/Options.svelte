@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
-	import { DEFAULT_AI_MODEL } from '../config';
+	import { DEFAULT_OPENAI_MODEL } from '../config';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
 	type SavedOptions = { openai_api_key: string; openai_model: string; custom_instructions: string };
@@ -12,7 +12,8 @@
 					resolve({
 						openai_api_key: (await chrome.storage.local.get('openai_api_key'))?.openai_api_key,
 						openai_model:
-							(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_AI_MODEL,
+							(await chrome.storage.sync.get(['openai_model']))?.openai_model ||
+							DEFAULT_OPENAI_MODEL,
 						custom_instructions:
 							(await chrome.storage.sync.get(['custom_instructions']))?.custom_instructions || ''
 					});
