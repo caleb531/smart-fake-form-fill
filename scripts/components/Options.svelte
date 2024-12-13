@@ -84,7 +84,6 @@
 			<textarea
 				name="custom_instructions"
 				id="custom_instructions"
-				required
 				bind:value={savedOptions.custom_instructions}
 			></textarea>
 		</p>
