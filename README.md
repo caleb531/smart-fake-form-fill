@@ -10,7 +10,12 @@ the semantics of the fields they are populating.
 
 Rather, this extension will send all form metadata (labels, formats, etc.) to
 the LLM so it can produce more realistic fake data (as counterintuitive as that
-sounds).
+sounds). If your data needs to follow specific rules, you can also specify
+custom instructions to send directly to the LLM.
+
+Currently, this extension only supports OpenAI (`gpt-4o-mini` or `gpt-4o`
+models). When you install the extension, you will be prompted to enter your
+OpenAI API key (which is required for this extension to operate).
 
 ## Usage
 
