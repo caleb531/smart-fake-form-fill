@@ -110,7 +110,7 @@ async function fetchAndPopulateFormValues({
 						? [
 								{
 									role: 'system',
-									content: custom_instructions?.toString() || ''
+									content: custom_instructions || ''
 								} as const
 							]
 						: []),
