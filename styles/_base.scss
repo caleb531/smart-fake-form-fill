@@ -5,12 +5,9 @@
 	box-sizing: border-box;
 }
 
-.site-wrapper {
-	display: contents;
-}
-
 body {
-	min-width: 350px;
+	width: 480px;
+	margin: 0 auto;
 	padding: 20px 30px;
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 	background-color: var(--color-app-background);
