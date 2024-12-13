@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { UI_MESSAGES } from '../config';
 	import type { Status, StatusUpdateRequest } from '../types';
+	import CancelIcon from './CancelIcon.svelte';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
 	let status: Status | null = $state(null);
@@ -51,6 +52,6 @@
 	<button
 		class="status-banner-close-button"
 		onclick={cancelRequest}
-		disabled={status?.code === 'CANCELED'}>x</button
+		disabled={status?.code !== 'PROCESSING'}><CancelIcon /></button
 	>
 </div>
