@@ -158,7 +158,6 @@ async function fetchAndPopulateFormValues({
 				} as FieldPopulatorRequest);
 			}
 		}
-		console.log('aborted', aborted);
 		if (aborted) {
 			throw new Error('Form fill canceled by user');
 		}
