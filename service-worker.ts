@@ -144,7 +144,6 @@ async function fetchAndPopulateFormValues({
 		);
 		const chunkParts: string[] = [];
 		for await (const chunk of completionStream) {
-			console.log('process chunk');
 			chunkParts.push(chunk.choices[0]?.delta.content || '');
 			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
 			if (fieldValues && Object.keys(fieldValues).length > 0) {
