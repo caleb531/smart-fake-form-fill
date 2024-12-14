@@ -34,6 +34,8 @@ function getFieldValuesFromCurrentChunk(partialJSONString: string): FieldValues 
 				// Remove Markdown code fence wrappers around JSON string
 				.replace(/^```(json)?\n/, '')
 				.replace(/\s*```$/, '')
+				// Remove leading comma after first opening brace
+				.replace(/\{\s*,/, '{')
 				// Close out intermediate JSON object if possible
 				.replace(/,\s*$/, '')
 				.replace(/\}\s*$/, '') + '}'
