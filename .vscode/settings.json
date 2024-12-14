@@ -15,6 +15,7 @@
 		"npm: build": [
 			"*.html",
 			"*.ts",
+			"prompts/*.txt",
 			"scripts/**/*.ts",
 			"scripts/**/*.svelte",
 			"styles/**/*.scss",
