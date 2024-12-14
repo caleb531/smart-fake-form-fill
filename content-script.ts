@@ -1,16 +1,13 @@
 import { mount } from 'svelte';
 import ContentScriptUI from './scripts/components/ContentScriptUI.svelte';
 import type {
-	FieldDefinition,
 	FieldPopulatorRequest,
 	FieldPopulatorResponse,
 	FieldValueGetterRequest,
 	FieldValueGetterResponse,
 	FieldValues,
 	FormFillerRequest,
-	FormFillerResponse,
-	PicklistFieldDefinition,
-	TextFieldDefinition
+	FormFillerResponse
 } from './scripts/types';
 import contentScriptUICSS from './styles/content-script-ui.scss?inline';
 
@@ -55,36 +52,55 @@ function getTopLevelFieldElements(form: HTMLFormElement) {
 	);
 }
 
-// The an array of field definitions to send to the OpenAI API
-function getFieldDefinitions(form: HTMLFormElement): FieldDefinition[] {
-	return (
-		getTopLevelFieldElements(form)
-			.map((element) => {
-				if (element instanceof HTMLFieldSetElement) {
-					const valueInputs = Array.from(element.querySelectorAll<HTMLInputElement>('input[name]'));
-					return {
-						name: element.name,
-						label: String(element.querySelector('legend')?.textContent),
-						isMultiSelect: valueInputs[0]?.type === 'checkbox' && valueInputs.length > 1,
-						values:
-							valueInputs
-								.map((input) => {
-									return form.querySelector(`label[for="${input.id}"]`)?.textContent;
-								})
-								.filter((label) => label) ?? []
-					} as PicklistFieldDefinition;
-				} else {
-					return {
-						name: element.name,
-						type: element.type && element.type !== 'text' ? element.type : undefined,
-						...('pattern' in element && element.pattern ? { pattern: element.pattern } : undefined),
-						label: String(form.querySelector(`label[for="${element.id}"]`)?.textContent)
-					} as TextFieldDefinition;
-				}
-			})
-			// Filter out blank labels
-			.filter((field) => field.label)
-	);
+// Return a simplified HTML string representation of the given form element,
+// with all attributes omitted except the relevant ones
+function getFormHTML(form: HTMLFormElement): string {
+	const allowedAttributes = ['name', 'type', 'pattern'];
+	function traverse(node: Node): string[] {
+		const parts: string[] = [];
+
+		if (node instanceof Element) {
+			// Start tag with tag name
+			parts.push(`<${node.tagName.toLowerCase()}`);
+
+			// Include allowed attributes if present
+			if (
+				node instanceof HTMLInputElement ||
+				node instanceof HTMLSelectElement ||
+				node instanceof HTMLTextAreaElement
+			) {
+				allowedAttributes.forEach((attr) => {
+					const attrValue = node.getAttribute(attr);
+					if (attrValue) {
+						parts.push(` ${attr}=${attrValue}`);
+					}
+				});
+			}
+
+			// Check if the element has no child nodes
+			if (node.childNodes.length === 0) {
+				parts.push(` />`); // Self-closing tag
+			} else {
+				parts.push(`>`); // Close start tag
+
+				// Recursively process child nodes
+				node.childNodes.forEach((child) => {
+					parts.push(...traverse(child));
+				});
+
+				// End tag
+				parts.push(`</${node.tagName.toLowerCase()}>`);
+			}
+		} else if (node instanceof Text) {
+			// Text node
+			parts.push(node.textContent || '');
+		}
+
+		return parts;
+	}
+
+	// Join the parts into a single string when returning
+	return traverse(form).join('');
 }
 
 // Populate the given input with the given value
@@ -101,7 +117,7 @@ export function populateInput(input: Element | null, value: string | number | bo
 		input.dispatchEvent(new Event('input', { bubbles: true }));
 		input.dispatchEvent(new Event('change', { bubbles: true }));
 	} else {
-		throw new Error('Could not find input');
+		console.error('Could not find input for value:', value);
 	}
 }
 
@@ -167,13 +183,13 @@ async function fillForm({
 	if (!lastSelectedForm) {
 		throw new Error('Cannot find form element; aborting.');
 	}
-	const fieldDefinitions = getFieldDefinitions(lastSelectedForm);
+	const formHTML = getFormHTML(lastSelectedForm);
 	// Once we have the field definitions, send them to OpenAI to generate
 	// fake values for the respective fields
 	const fieldValueGetterRequest: FieldValueGetterRequest = {
 		action: 'getFieldValues',
 		tabId,
-		fieldDefinitions
+		formHTML
 	};
 	const fieldValueGetterResponse: FieldValueGetterResponse =
 		await chrome.runtime.sendMessage(fieldValueGetterRequest);

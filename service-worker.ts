@@ -7,7 +7,6 @@ import {
 	OPENAI_REQUEST_TIMEOUT
 } from './scripts/config';
 import type {
-	FieldDefinition,
 	FieldPopulatorRequest,
 	FieldValueGetterResponse,
 	FieldValues,
@@ -82,11 +81,11 @@ function getStatus({
 // Fetch the relevant form values
 async function fetchAndPopulateFormValues({
 	tabId,
-	fieldDefinitions,
+	formHTML,
 	sendResponse
 }: {
 	tabId: number | undefined;
-	fieldDefinitions: FieldDefinition[];
+	formHTML: string;
 	sendResponse: (response?: FieldValueGetterResponse) => void;
 }) {
 	try {
@@ -103,7 +102,7 @@ async function fetchAndPopulateFormValues({
 		if (custom_instructions) {
 			console.log('custom instructions:', custom_instructions);
 		}
-		console.log('field definitions:', fieldDefinitions);
+		console.log('form HTML:', formHTML);
 		if (!tabId) {
 			throw new Error('No active tab');
 		}
@@ -131,7 +130,7 @@ async function fetchAndPopulateFormValues({
 						: []),
 					{
 						role: 'user',
-						content: `\`\`\`\n${JSON.stringify(fieldDefinitions)}\n\`\`\``
+						content: `\`\`\`\n${JSON.stringify(formHTML)}\n\`\`\``
 					}
 				]
 			},
@@ -145,7 +144,9 @@ async function fetchAndPopulateFormValues({
 			}
 		);
 		const chunkParts: string[] = [];
+		const allChunkParts: string[] = [];
 		for await (const chunk of completionStream) {
+			allChunkParts.push(chunk.choices[0]?.delta.content || '');
 			chunkParts.push(chunk.choices[0]?.delta.content || '');
 			const fieldValues = getFieldValuesFromCurrentChunk(chunkParts.join(''));
 			if (fieldValues && Object.keys(fieldValues).length > 0) {
@@ -187,7 +188,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			// <https://bugs.chromium.org/p/chromium/issues/detail?id=1185241>)
 			fetchAndPopulateFormValues({
 				tabId: message.tabId,
-				fieldDefinitions: message.fieldDefinitions,
+				formHTML: message.formHTML,
 				sendResponse
 			});
 			return true;

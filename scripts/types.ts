@@ -34,7 +34,7 @@ export type StatusUpdateRequest = {
 export type FieldValueGetterRequest = {
 	action: 'getFieldValues';
 	tabId: number | undefined;
-	fieldDefinitions: FieldDefinition[];
+	formHTML: string;
 };
 export type FieldPopulatorRequest = {
 	action: 'populateFieldsIntoForm';
