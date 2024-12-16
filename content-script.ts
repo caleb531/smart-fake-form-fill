@@ -41,21 +41,10 @@ function getFormFromLastClickedElement() {
 	return lastRightClickedElement?.closest('form') ?? null;
 }
 
-// Get all top-level elements representing form fields, whether an input,
-// textarea, or fieldset; per this definition, inputs within fieldsets are
-// excluded
-function getTopLevelFieldElements(form: HTMLFormElement) {
-	return Array.from(
-		form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLFieldSetElement>(
-			'[name]:not([readonly]):not([disabled]):not(fieldset [name]), fieldset'
-		)
-	);
-}
-
 // Return a simplified HTML string representation of the given form element,
 // with all attributes omitted except the relevant ones
 function getFormHTML(form: HTMLFormElement): string {
-	const allowedAttributes = ['name', 'type', 'pattern'];
+	const allowedAttributes = ['name', 'type', 'pattern', 'value'];
 	function traverse(node: Node): string[] {
 		const parts: string[] = [];
 
@@ -105,7 +94,11 @@ function getFormHTML(form: HTMLFormElement): string {
 
 // Populate the given input with the given value
 export function populateInput(input: Element | null, value: string | number | boolean) {
-	if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+	if (
+		input instanceof HTMLInputElement ||
+		input instanceof HTMLTextAreaElement ||
+		input instanceof HTMLSelectElement
+	) {
 		if (
 			input instanceof HTMLInputElement &&
 			(input.type === 'checkbox' || input.type === 'radio')
@@ -121,6 +114,7 @@ export function populateInput(input: Element | null, value: string | number | bo
 	}
 }
 
+// Populate the specified fields into the given form element
 async function populateFieldsIntoForm({
 	form,
 	fieldValues
@@ -128,25 +122,26 @@ async function populateFieldsIntoForm({
 	form: HTMLFormElement;
 	fieldValues: FieldValues;
 }): Promise<void> {
-	const topLevelFieldElements = getTopLevelFieldElements(form);
-	topLevelFieldElements.forEach((element) => {
-		const selectedValues = fieldValues[element.name];
-		if (element instanceof HTMLFieldSetElement) {
-			element.querySelectorAll<HTMLInputElement>('input[name]').forEach((input) => {
-				const label = input.labels?.[0]?.textContent;
-				if (!label) {
-					return;
-				}
-				const trimmedLabel = label.trim();
-				if (
-					selectedValues === trimmedLabel ||
-					(Array.isArray(selectedValues) && selectedValues.includes(trimmedLabel))
-				) {
-					populateInput(input, true);
+	Object.entries(fieldValues).forEach(([fieldName, fieldValue]) => {
+		const radioNodeListOrElement = form.elements.namedItem(fieldName);
+		if (radioNodeListOrElement instanceof RadioNodeList) {
+			// If the field is a radio button group or checkbox group, find the input
+			// with the matching value and check it
+			const fieldValues = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
+			fieldValues.forEach((optionValue) => {
+				const optionElement = Array.from(radioNodeListOrElement).find((option) => {
+					return option instanceof HTMLInputElement && option.value === optionValue;
+				});
+				if (optionElement instanceof Element) {
+					populateInput(optionElement, true);
 				}
 			});
-		} else if (!Array.isArray(selectedValues) && selectedValues) {
-			populateInput(element, selectedValues);
+		} else if (!Array.isArray(fieldValue)) {
+			// Otherwise, populate the field with the value
+			const element = radioNodeListOrElement;
+			populateInput(element, fieldValue);
+		} else {
+			console.log('Could not find form field:', fieldName);
 		}
 	});
 }
