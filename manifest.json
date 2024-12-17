@@ -1,6 +1,6 @@
 {
 	"name": "Smart Fake Form Fill",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"manifest_version": 3,
 	"description": "A Chrome extension for populating forms with relevant, AI-generated data",
 	"icons": {
@@ -18,7 +18,7 @@
 		"default_popup": "options.html"
 	},
 	"options_page": "options.html",
-	"permissions": ["contextMenus", "notifications", "storage", "activeTab"],
+	"permissions": ["contextMenus", "storage", "activeTab"],
 	"content_scripts": [
 		{
 			"matches": ["<all_urls>"],
