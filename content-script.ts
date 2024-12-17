@@ -82,7 +82,7 @@ function getFormHTML(form: HTMLFormElement): string {
 			}
 		} else if (node instanceof Text) {
 			// Text node
-			parts.push(node.textContent || '');
+			parts.push(String(node.textContent || '').trim());
 		}
 
 		return parts;
