@@ -71,6 +71,11 @@
 				bind:value={savedOptions.openai_api_key}
 				onfocus={(event) => event.currentTarget.select()}
 			/>
+			<span class="hint">
+				<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer"
+					>Visit the OpenAI API Dashboard</a
+				> to generate an API key.
+			</span>
 		</p>
 		<p>
 			<label for="openai_model">AI Model</label>
@@ -87,7 +92,7 @@
 				bind:value={savedOptions.custom_instructions}
 			></textarea>
 		</p>
-		<p class="autosave-hint">
+		<p class="hint">
 			{#if justSaved}
 				Saved!
 			{:else}
