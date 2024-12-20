@@ -60,6 +60,13 @@ input[type='password'] {
 	}
 }
 
+select {
+	padding-right: 35px;
+	background-image: url('/public/icons/chevron-down.svg');
+	background-repeat: no-repeat;
+	background-position: right 5px center;
+}
+
 textarea {
 	min-height: 120px;
 	resize: vertical;
