@@ -44,5 +44,12 @@
 	"dependencies": {
 		"es-toolkit": "^1.29.0",
 		"openai": "^4.73.1"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"dtrace-provider",
+			"esbuild",
+			"spawn-sync"
+		]
 	}
 }
