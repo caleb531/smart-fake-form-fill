@@ -54,9 +54,11 @@ function getFormHTML(form: HTMLFormElement): string {
 
 			// Include allowed attributes if present
 			if (
-				node instanceof HTMLInputElement ||
-				node instanceof HTMLSelectElement ||
-				node instanceof HTMLTextAreaElement
+				(node instanceof HTMLInputElement ||
+					node instanceof HTMLSelectElement ||
+					node instanceof HTMLTextAreaElement) &&
+				!('readOnly' in node && node.readOnly) &&
+				!node.disabled
 			) {
 				allowedAttributes.forEach((attr) => {
 					const attrValue = node.getAttribute(attr);
