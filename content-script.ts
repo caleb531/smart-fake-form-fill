@@ -44,54 +44,47 @@ function getFormFromLastClickedElement() {
 // Return a simplified HTML string representation of the given form element,
 // with all attributes omitted except the relevant ones
 const allowedAttributes = ['name', 'type', 'pattern', 'value'];
-function getFormHTML(form: HTMLFormElement): string {
-	function traverse(node: Node): string[] {
-		const parts: string[] = [];
-
-		if (node instanceof Element) {
-			// Start tag with tag name
-			parts.push(`<${node.tagName.toLowerCase()}`);
-
-			// Include allowed attributes if present
-			if (
-				(node instanceof HTMLInputElement ||
-					node instanceof HTMLSelectElement ||
-					node instanceof HTMLTextAreaElement) &&
-				!('readOnly' in node && node.readOnly) &&
-				!node.disabled
-			) {
-				allowedAttributes.forEach((attr) => {
-					const attrValue = node.getAttribute(attr);
-					if (attrValue) {
-						parts.push(` ${attr}=${attrValue}`);
-					}
-				});
-			}
-
-			// Check if the element has no child nodes
-			if (node.childNodes.length === 0) {
-				parts.push(` />`); // Self-closing tag
-			} else {
-				parts.push(`>`); // Close start tag
-
-				// Recursively process child nodes
-				node.childNodes.forEach((child) => {
-					parts.push(...traverse(child));
-				});
-
-				// End tag
-				parts.push(`</${node.tagName.toLowerCase()}>`);
-			}
-		} else if (node instanceof Text) {
-			// Text node
-			parts.push(String(node.textContent || '').trim());
+function traverseNode(node: Node): string[] {
+	const parts: string[] = [];
+	if (node instanceof Element) {
+		// Start tag with tag name
+		parts.push(`<${node.tagName.toLowerCase()}`);
+		// Include allowed attributes if present
+		if (
+			(node instanceof HTMLInputElement ||
+				node instanceof HTMLSelectElement ||
+				node instanceof HTMLTextAreaElement) &&
+			!('readOnly' in node && node.readOnly) &&
+			!node.disabled
+		) {
+			allowedAttributes.forEach((attr) => {
+				const attrValue = node.getAttribute(attr);
+				if (attrValue) {
+					parts.push(` ${attr}=${attrValue}`);
+				}
+			});
 		}
-
-		return parts;
+		// Check if the element has no child nodes
+		if (node.childNodes.length === 0) {
+			parts.push(` />`); // Self-closing tag
+		} else {
+			parts.push(`>`); // Close start tag
+			// Recursively process child nodes
+			node.childNodes.forEach((child) => {
+				parts.push(...traverseNode(child));
+			});
+			// End tag
+			parts.push(`</${node.tagName.toLowerCase()}>`);
+		}
+	} else if (node instanceof Text) {
+		// Text node
+		parts.push(String(node.textContent || '').trim());
 	}
-
+	return parts;
+}
+function getFormHTML(form: HTMLFormElement): string {
 	// Join the parts into a single string when returning
-	return traverse(form).join('');
+	return traverseNode(form).join('');
 }
 
 // Populate the given input with the given value
