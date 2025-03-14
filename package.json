@@ -1,6 +1,6 @@
 {
 	"name": "smart-fake-form-fill",
-	"version": "0.6.0",
+	"version": "1.0.0",
 	"private": true,
 	"type": "module",
 	"description": "A Chrome extension for populating forms with relevant, AI-generated data",
