@@ -7,14 +7,15 @@ designed to assist developers by generating fake data for form-filling and
 testing. This Privacy Policy explains how we handle and protect your data when
 you use our Extension.
 
-This Privacy Policy was last updated on December 18th, 2024.
+This Privacy Policy was last updated on March 14th, 2025.
 
 ## Third-Party Services
 
 The Extension sends the HTML of the chosen form to the OpenAI API to generate
-the fake data. These API calls are encrypted in transit with HTTPS. Please see
-[OpenAI's privacy policy][openai-privacy-policy] for how they collect and manage
-the data they receive from the Extension.
+the fake data. These API calls are encrypted in transit with HTTPS, and are only
+sent when you trigger the extension via the "Smart Fake Form Fill" item in the
+right-click menu. Please see [OpenAI's privacy policy][openai-privacy-policy]
+for how they collect and manage the data they receive from the Extension.
 
 [openai-privacy-policy]: https://openai.com/policies/row-privacy-policy/
 
