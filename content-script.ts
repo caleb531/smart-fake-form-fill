@@ -43,8 +43,8 @@ function getFormFromLastClickedElement() {
 
 // Return a simplified HTML string representation of the given form element,
 // with all attributes omitted except the relevant ones
+const allowedAttributes = ['name', 'type', 'pattern', 'value'];
 function getFormHTML(form: HTMLFormElement): string {
-	const allowedAttributes = ['name', 'type', 'pattern', 'value'];
 	function traverse(node: Node): string[] {
 		const parts: string[] = [];
 
