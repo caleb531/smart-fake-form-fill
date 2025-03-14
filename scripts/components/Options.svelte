@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
-	import { DEFAULT_OPENAI_MODEL } from '../config';
+	import { AVAILABLE_OPENAI_MODELS, DEFAULT_OPENAI_MODEL } from '../config';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
 	type SavedOptions = { openai_api_key: string; openai_model: string; custom_instructions: string };
@@ -80,8 +80,9 @@
 		<p>
 			<label for="openai_model">AI Model</label>
 			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
-				<option value="gpt-4o-mini">gpt-4o-mini</option>
-				<option value="gpt-4o">gpt-4o</option>
+				{#each AVAILABLE_OPENAI_MODELS as modelId}
+					<option value={modelId}>{modelId}</option>
+				{/each}
 			</select>
 		</p>
 		<p>

@@ -1,5 +1,7 @@
 // The display name of the extension
 export const EXTENSION_DISPLAY_NAME = 'Smart Fake Form Fill';
+// The select OpenAI models available for use
+export const AVAILABLE_OPENAI_MODELS = ['gpt-4o-mini', 'gpt-4o'];
 // Define the default AI model to use
 export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 // The maximum number of times to retry establishing a connection to the OpenAI
