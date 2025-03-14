@@ -63,7 +63,7 @@ function getFormHTML(form: HTMLFormElement): string {
 				allowedAttributes.forEach((attr) => {
 					const attrValue = node.getAttribute(attr);
 					if (attrValue) {
-						parts.push(` ${attr}="${attrValue}"`);
+						parts.push(` ${attr}=${attrValue}`);
 					}
 				});
 			}
