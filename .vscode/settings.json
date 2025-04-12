@@ -13,6 +13,7 @@
 	"eslint.validate": ["svelte"],
 	"triggerTaskOnSave.tasks": {
 		"npm: build": [
+			"manifest.json",
 			"*.html",
 			"*.ts",
 			"prompts/*.txt",
