@@ -80,7 +80,7 @@
 		<p>
 			<label for="openai_model">AI Model</label>
 			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
-				{#each AVAILABLE_OPENAI_MODELS as modelId}
+				{#each AVAILABLE_OPENAI_MODELS as modelId (modelId)}
 					<option value={modelId}>{modelId}</option>
 				{/each}
 			</select>

@@ -25,6 +25,7 @@
 	},
 	"homepage": "https://github.com/caleb531/smart-fake-form-fill#readme",
 	"devDependencies": {
+		"@eslint/js": "^9.39.1",
 		"@sveltejs/vite-plugin-svelte": "^5.1.0",
 		"@types/chrome": "^0.0.326",
 		"@types/node": "^24.0.1",
