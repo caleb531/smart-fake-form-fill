@@ -10,7 +10,7 @@
 		}
 	},
 	"workbench.editor.labelFormat": "short",
-	"eslint.validate": ["svelte"],
+	"eslint.validate": ["javascript", "typescript", "svelte"],
 	"triggerTaskOnSave.tasks": {
 		"npm: build": [
 			"manifest.json",
