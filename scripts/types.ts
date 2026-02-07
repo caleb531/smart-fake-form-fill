@@ -44,6 +44,10 @@ export type GetStatusRequest = {
 	action: 'getStatus';
 };
 
+export type OpenAiModelListRequest = {
+	action: 'getModels';
+};
+
 export type FieldDefinitionGetterResponse = {
 	status: Status;
 	fieldDefinitions: FieldDefinition[];
@@ -57,5 +61,11 @@ export type FieldValueGetterResponse = {
 export type FormFillerResponse = FieldValueGetterResponse;
 export type FieldPopulatorResponse = {
 	status: Status;
+	errorMessage?: string;
+};
+
+export type OpenAiModelListResponse = {
+	status: Status;
+	models?: string[];
 	errorMessage?: string;
 };

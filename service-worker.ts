@@ -10,12 +10,17 @@ import type {
 	FieldPopulatorRequest,
 	FieldValueGetterResponse,
 	FieldValues,
+	OpenAiModelListResponse,
 	Status,
 	StatusUpdateRequest
 } from './scripts/types';
 
 // The ID of the context menu item used to trigger the extension
 const CONTEXT_MENU_ITEM_ID = 'populateFieldsIntoForm';
+
+// The regular expression used to filter which models are available for the
+// extension
+const MODEL_ID_PATTERN = /^(gpt(-\d[a-z0-9.]*)|o\d+)(-[a-z]+)?$/;
 
 // Store the current status of the form fill job so we can retrieve the job
 // status at any time
@@ -76,6 +81,30 @@ function getStatus({
 	sendResponse: (response: { status: Status | null }) => void;
 }) {
 	sendResponse({ status: currentStatus });
+}
+
+async function getModels({
+	sendResponse
+}: {
+	sendResponse: (response: OpenAiModelListResponse) => void;
+}) {
+	try {
+		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
+		if (!openai_api_key) {
+			throw new Error('OpenAI API key missing; please define it is the extension settings');
+		}
+		const openai = new OpenAI({ apiKey: openai_api_key });
+		const modelList = await openai.models.list();
+		const allModelIds = modelList.data.map((model) => model.id);
+		let filteredModelIds = allModelIds.filter((modelId) => MODEL_ID_PATTERN.test(modelId));
+		if (filteredModelIds.length === 0) {
+			filteredModelIds = allModelIds;
+		}
+		sendResponse({ status: { code: 'SUCCESS' }, models: filteredModelIds });
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Failed to load model list';
+		sendResponse({ status: { code: 'ERROR', message } });
+	}
 }
 
 // Fetch the relevant form values
@@ -194,6 +223,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			return true;
 		case 'getStatus':
 			getStatus({ sendResponse });
+			return true;
+		case 'getModels':
+			getModels({ sendResponse });
 			return true;
 		case 'cancelRequest':
 			aborted = true;

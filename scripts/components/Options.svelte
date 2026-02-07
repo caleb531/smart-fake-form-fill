@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
-	import { AVAILABLE_OPENAI_MODELS, DEFAULT_OPENAI_MODEL } from '../config';
+	import { DEFAULT_OPENAI_MODEL } from '../config';
+	import type { OpenAiModelListResponse } from '../types';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
 	type SavedOptions = { openai_api_key: string; openai_model: string; custom_instructions: string };
@@ -21,6 +22,36 @@
 					reject(error);
 				}
 			})();
+		})
+	);
+
+	async function getFallbackModelList(): Promise<string[]> {
+		try {
+			const storedModel =
+				(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_OPENAI_MODEL;
+			return Array.from(new Set([storedModel, DEFAULT_OPENAI_MODEL])).sort();
+		} catch (error) {
+			console.error(error);
+			return [DEFAULT_OPENAI_MODEL];
+		}
+	}
+
+	const modelListPromise: Promise<string[]> = $state(
+		new Promise((resolve) => {
+			chrome.runtime.sendMessage(
+				{ action: 'getModels' },
+				(response: OpenAiModelListResponse | undefined) => {
+					if (chrome.runtime.lastError) {
+						getFallbackModelList().then(resolve);
+						return;
+					}
+					if (response?.status.code === 'SUCCESS' && response.models?.length) {
+						resolve(response.models);
+						return;
+					}
+					getFallbackModelList().then(resolve);
+				}
+			);
 		})
 	);
 
@@ -80,9 +111,17 @@
 		<p>
 			<label for="openai_model">AI Model</label>
 			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
-				{#each AVAILABLE_OPENAI_MODELS as modelId (modelId)}
-					<option value={modelId}>{modelId}</option>
-				{/each}
+				{#await modelListPromise}
+					<option disabled>Loading model list...</option>
+				{:then modelList}
+					{#each modelList as modelId (modelId)}
+						<option value={modelId}>{modelId}</option>
+					{/each}
+				{:catch}
+					<option disabled>
+						Failed to load model list; defaulting to {DEFAULT_OPENAI_MODEL}
+					</option>
+				{/await}
 			</select>
 		</p>
 		<p>
