@@ -2,9 +2,9 @@ import OpenAI from 'openai';
 import systemPrompt from './prompts/system.txt?raw';
 import {
 	DEFAULT_OPENAI_MODEL,
+	DEFAULT_OPENAI_REQUEST_TIMEOUT,
 	EXTENSION_DISPLAY_NAME,
-	OPENAI_REQUEST_MAX_RETRIES,
-	OPENAI_REQUEST_TIMEOUT
+	OPENAI_REQUEST_MAX_RETRIES
 } from './scripts/config';
 import type {
 	FieldPopulatorRequest,
@@ -126,6 +126,13 @@ async function fetchAndPopulateFormValues({
 		const { custom_instructions } = await chrome.storage.sync.get<{ custom_instructions: string }>(
 			'custom_instructions'
 		);
+		const openai_request_timeout_seconds = Number(
+			(
+				await chrome.storage.sync.get<{ openai_request_timeout_seconds: number }>([
+					'openai_request_timeout_seconds'
+				])
+			)?.openai_request_timeout_seconds ?? DEFAULT_OPENAI_REQUEST_TIMEOUT
+		);
 		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
@@ -175,7 +182,7 @@ async function fetchAndPopulateFormValues({
 				// without a response from OpenAI (multiplied by a maximum number of
 				// attempts)
 				maxRetries: OPENAI_REQUEST_MAX_RETRIES,
-				timeout: OPENAI_REQUEST_TIMEOUT,
+				timeout: openai_request_timeout_seconds * 1000,
 				signal: abortController.signal
 			}
 		);

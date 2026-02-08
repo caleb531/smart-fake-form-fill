@@ -5,8 +5,8 @@ export const DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 // The maximum number of times to retry establishing a connection to the OpenAI
 // API (note that this will be in addition to a guaranteed first attempt)
 export const OPENAI_REQUEST_MAX_RETRIES = 1;
-// The number of milliseconds to wait before timing out the OpenAI request
-export const OPENAI_REQUEST_TIMEOUT = 30000;
+// The number of seconds to wait before timing out the OpenAI request
+export const DEFAULT_OPENAI_REQUEST_TIMEOUT = 90;
 
 // The possible messages to show within the UI based on the state of the
 // extension

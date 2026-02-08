@@ -1,10 +1,24 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
-	import { DEFAULT_OPENAI_MODEL } from '../config';
+	import { DEFAULT_OPENAI_MODEL, DEFAULT_OPENAI_REQUEST_TIMEOUT } from '../config';
 	import type { OpenAiModelListResponse } from '../types';
 	import LoadingIndicator from './LoadingIndicator.svelte';
 
-	type SavedOptions = { openai_api_key: string; openai_model: string; custom_instructions: string };
+	const requestTimeoutOptions: Record<string, number> = {
+		'15 seconds': 15,
+		'30 seconds': 30,
+		'60 seconds': 60,
+		'90 seconds': 90,
+		'2 minutes': 120,
+		'5 minutes': 300
+	};
+
+	type SavedOptions = {
+		openai_api_key: string;
+		openai_model: string;
+		openai_request_timeout_seconds: number;
+		custom_instructions: string;
+	};
 
 	let savedOptionsPromise: Promise<SavedOptions> = $state(
 		new Promise((resolve, reject) => {
@@ -17,6 +31,13 @@
 						openai_model:
 							((await chrome.storage.sync.get<{ openai_model: string }>(['openai_model']))
 								?.openai_model as string | null) || DEFAULT_OPENAI_MODEL,
+						openai_request_timeout_seconds: Number(
+							(
+								await chrome.storage.sync.get<{ openai_request_timeout_seconds: number }>([
+									'openai_request_timeout_seconds'
+								])
+							)?.openai_request_timeout_seconds ?? DEFAULT_OPENAI_REQUEST_TIMEOUT
+						),
 						custom_instructions:
 							((
 								await chrome.storage.sync.get<{ custom_instructions: string }>([
@@ -71,9 +92,11 @@
 	const successDelay = 2000;
 
 	const saveOption = debounce(async (event: Event) => {
-		const input = event.target as HTMLInputElement;
+		const input = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 		if (input.name === 'openai_api_key') {
 			await chrome.storage.local.set({ openai_api_key: input.value });
+		} else if (input.name === 'openai_request_timeout_seconds') {
+			await chrome.storage.sync.set({ openai_request_timeout_seconds: Number(input.value) });
 		} else {
 			await chrome.storage.sync.set({ [input.name]: input.value });
 		}
@@ -132,6 +155,19 @@
 							DEFAULT_OPENAI_MODEL}
 					</option>
 				{/await}
+			</select>
+		</p>
+		<p>
+			<label for="openai_request_timeout_seconds">Request Timeout</label>
+			<select
+				name="openai_request_timeout_seconds"
+				id="openai_request_timeout_seconds"
+				bind:value={savedOptions.openai_request_timeout_seconds}
+				required
+			>
+				{#each Object.entries(requestTimeoutOptions) as [label, timeoutSeconds] (timeoutSeconds)}
+					<option value={timeoutSeconds}>{label}</option>
+				{/each}
 			</select>
 		</p>
 		<p>
