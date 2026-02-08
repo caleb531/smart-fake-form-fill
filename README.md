@@ -1,6 +1,6 @@
 # Smart Fake Form Fill
 
-_Copyright 2024-2025 Caleb Evans_  
+_Copyright 2024-2026 Caleb Evans_  
 _Released under the MIT license_
 
 Smart Fake Form Fill is Chrome extension that enables developers to populate forms with relevant, AI-generated data for testing purposes.
