@@ -112,14 +112,17 @@
 			<label for="openai_model">AI Model</label>
 			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
 				{#await modelListPromise}
-					<option disabled>Loading model list...</option>
+					<option disabled value={savedOptions.openai_model || ''}
+						>{savedOptions.openai_model || 'Loading model list...'}</option
+					>
 				{:then modelList}
 					{#each modelList as modelId (modelId)}
 						<option value={modelId}>{modelId}</option>
 					{/each}
 				{:catch}
-					<option disabled>
-						Failed to load model list; defaulting to {DEFAULT_OPENAI_MODEL}
+					<option disabled value={savedOptions.openai_model || DEFAULT_OPENAI_MODEL}>
+						Failed to load model list; defaulting to {savedOptions.openai_model ||
+							DEFAULT_OPENAI_MODEL}
 					</option>
 				{/await}
 			</select>
