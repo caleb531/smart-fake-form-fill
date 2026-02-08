@@ -11,12 +11,18 @@
 			(async () => {
 				try {
 					resolve({
-						openai_api_key: (await chrome.storage.local.get('openai_api_key'))?.openai_api_key,
+						openai_api_key:
+							((await chrome.storage.local.get<{ openai_api_key: string }>('openai_api_key'))
+								?.openai_api_key as string | null) || '',
 						openai_model:
-							(await chrome.storage.sync.get(['openai_model']))?.openai_model ||
-							DEFAULT_OPENAI_MODEL,
+							((await chrome.storage.sync.get<{ openai_model: string }>(['openai_model']))
+								?.openai_model as string | null) || DEFAULT_OPENAI_MODEL,
 						custom_instructions:
-							(await chrome.storage.sync.get(['custom_instructions']))?.custom_instructions || ''
+							((
+								await chrome.storage.sync.get<{ custom_instructions: string }>([
+									'custom_instructions'
+								])
+							)?.custom_instructions as string | null) || ''
 					});
 				} catch (error) {
 					reject(error);
@@ -28,7 +34,8 @@
 	async function getFallbackModelList(): Promise<string[]> {
 		try {
 			const storedModel =
-				(await chrome.storage.sync.get(['openai_model']))?.openai_model || DEFAULT_OPENAI_MODEL;
+				(await chrome.storage.sync.get<{ openai_model: string }>(['openai_model']))?.openai_model ||
+				DEFAULT_OPENAI_MODEL;
 			return Array.from(new Set([storedModel, DEFAULT_OPENAI_MODEL])).sort();
 		} catch (error) {
 			console.error(error);

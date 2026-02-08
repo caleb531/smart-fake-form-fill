@@ -89,7 +89,9 @@ async function getModels({
 	sendResponse: (response: OpenAiModelListResponse) => void;
 }) {
 	try {
-		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
+		const { openai_api_key } = await chrome.storage.local.get<{ openai_api_key: string }>(
+			'openai_api_key'
+		);
 		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
@@ -118,13 +120,18 @@ async function fetchAndPopulateFormValues({
 	sendResponse: (response?: FieldValueGetterResponse) => void;
 }) {
 	try {
-		const { openai_api_key } = await chrome.storage.local.get('openai_api_key');
-		const { custom_instructions } = await chrome.storage.sync.get('custom_instructions');
+		const { openai_api_key } = await chrome.storage.local.get<{ openai_api_key: string }>(
+			'openai_api_key'
+		);
+		const { custom_instructions } = await chrome.storage.sync.get<{ custom_instructions: string }>(
+			'custom_instructions'
+		);
 		if (!openai_api_key) {
 			throw new Error('OpenAI API key missing; please define it is the extension settings');
 		}
 		const model =
-			(await chrome.storage.sync.get('openai_model'))?.openai_model || DEFAULT_OPENAI_MODEL;
+			(await chrome.storage.sync.get<{ openai_model: string }>('openai_model'))?.openai_model ||
+			DEFAULT_OPENAI_MODEL;
 		const openai = new OpenAI({ apiKey: openai_api_key });
 		console.log('model:', model);
 		console.log('system prompt:', systemPrompt);
