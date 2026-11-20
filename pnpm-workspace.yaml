@@ -2,6 +2,7 @@ overrides:
   '@babel/runtime@<7.26.10': '>=7.26.10'
 engineStrict: true
 allowBuilds:
+  '@parcel/watcher': true
   dtrace-provider: true
   esbuild: true
   spawn-sync: true

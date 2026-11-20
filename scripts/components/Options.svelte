@@ -133,18 +133,18 @@
 				onfocus={(event) => event.currentTarget.select()}
 			/>
 			<span class="hint">
-				<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer"
-					>Visit the OpenAI API Dashboard</a
-				> to generate an API key.
+				<a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
+					Visit the OpenAI API Dashboard
+				</a> to generate an API key.
 			</span>
 		</p>
 		<p>
 			<label for="openai_model">AI Model</label>
 			<select name="openai_model" id="openai_model" bind:value={savedOptions.openai_model} required>
 				{#await modelListPromise}
-					<option disabled value={savedOptions.openai_model || ''}
-						>{savedOptions.openai_model || 'Loading model list...'}</option
-					>
+					<option disabled value={savedOptions.openai_model || ''}>
+						{savedOptions.openai_model || 'Loading model list...'}
+					</option>
 				{:then modelList}
 					{#each modelList as modelId (modelId)}
 						<option value={modelId}>{modelId}</option>
@@ -175,8 +175,7 @@
 			<textarea
 				name="custom_instructions"
 				id="custom_instructions"
-				bind:value={savedOptions.custom_instructions}
-			></textarea>
+				bind:value={savedOptions.custom_instructions}></textarea>
 		</p>
 		<p class="hint">
 			{#if justSaved}
